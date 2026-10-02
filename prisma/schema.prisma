@@ -1,0 +1,454 @@
+// Prisma Schema for MediLink Healthcare & Diagnostic Marketplace
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+enum Role {
+  PATIENT
+  DOCTOR
+  CLINIC
+  LABORATORY
+  ADMIN
+}
+
+enum UserStatus {
+  PENDING
+  VERIFIED
+  SUSPENDED
+  REJECTED
+}
+
+enum AppointmentStatus {
+  CONFIRMED
+  IN_PROGRESS
+  COMPLETED
+  CANCELLED
+  NO_SHOW
+}
+
+enum AppointmentType {
+  IN_PERSON
+  TELECONSULT
+}
+
+enum QueueStatus {
+  ACTIVE
+  PAUSED
+  CLOSED
+}
+
+enum QueueTicketStatus {
+  WAITING
+  IN_CONSULTATION
+  COMPLETED
+  SKIPPED
+  CANCELLED
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  SAMPLE_COLLECTED
+  PROCESSING
+  REPORT_READY
+  CANCELLED
+}
+
+enum SampleStatus {
+  COLLECTED
+  IN_TRANSIT
+  RECEIVED_AT_LAB
+  ANALYZING
+  COMPLETED
+  REJECTED
+}
+
+enum ReferralPriority {
+  NORMAL
+  URGENT
+}
+
+enum ReferralStatus {
+  PENDING
+  BOOKED
+  COMPLETED
+  EXPIRED
+}
+
+enum TargetType {
+  DOCTOR
+  CLINIC
+  LABORATORY
+}
+
+enum NotificationType {
+  APPOINTMENT
+  QUEUE
+  BOOKING
+  SAMPLE
+  REPORT
+  VERIFICATION
+  SYSTEM
+}
+
+model User {
+  id           String     @id @default(uuid())
+  email        String     @unique
+  passwordHash String
+  name         String
+  role         Role       @default(PATIENT)
+  phone        String?
+  avatarUrl    String?
+  status       UserStatus @default(VERIFIED)
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  patientProfile PatientProfile?
+  doctorProfile  DoctorProfile?
+  clinic         Clinic?
+  laboratory     Laboratory?
+  notifications  Notification[]
+  auditLogs      AuditLog[]
+
+  @@index([email])
+  @@index([role])
+}
+
+model PatientProfile {
+  id                 String   @id @default(uuid())
+  userId             String   @unique
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  dob                String?
+  gender             String?
+  bloodGroup         String?
+  allergies          String?
+  emergencyContact   String?
+  address            String?
+  medicalHistoryJson String?  @default("[]")
+  createdAt          DateTime @default(now())
+  updatedAt          DateTime @updatedAt
+
+  appointments Appointment[]
+  testBookings TestBooking[]
+  reports      MedicalReport[]
+  reviews      Review[]
+  referrals    Referral[]
+}
+
+model Clinic {
+  id             String   @id @default(uuid())
+  userId         String   @unique
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name           String
+  address        String
+  city           String
+  phone          String
+  email          String
+  registrationNo String
+  servicesJson   String   @default("[]")
+  facilitiesJson String   @default("[]")
+  openingTime    String   @default("08:00")
+  closingTime    String   @default("20:00")
+  isVerified     Boolean  @default(false)
+  rating         Float    @default(5.0)
+  reviewCount    Int      @default(0)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  doctors      ClinicDoctor[]
+  appointments Appointment[]
+  queues       Queue[]
+}
+
+model DoctorProfile {
+  id                   String   @id @default(uuid())
+  userId               String   @unique
+  user                 User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  specialty            String
+  subSpecialty         String?
+  experienceYears      Int      @default(0)
+  qualification        String
+  licenseNumber        String
+  consultationFee      Float    @default(50.0)
+  bio                  String?
+  consultationDuration Int      @default(15)
+  rating               Float    @default(5.0)
+  reviewCount          Int      @default(0)
+  clinicId             String?
+  isVerified           Boolean  @default(false)
+  availabilityJson     String   @default("[]")
+  createdAt            DateTime @default(now())
+  updatedAt            DateTime @updatedAt
+
+  clinics      ClinicDoctor[]
+  appointments Appointment[]
+  queues       Queue[]
+  referrals    Referral[]
+  reports      MedicalReport[]
+
+  @@index([specialty])
+}
+
+model ClinicDoctor {
+  id                String   @id @default(uuid())
+  clinicId          String
+  clinic            Clinic   @relation(fields: [clinicId], references: [id], onDelete: Cascade)
+  doctorId          String
+  doctor            DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  daysAvailableJson String   @default("[]")
+  roomNo            String?
+  status            String   @default("ACTIVE")
+  createdAt         DateTime @default(now())
+
+  @@unique([clinicId, doctorId])
+}
+
+model Laboratory {
+  id                     String   @id @default(uuid())
+  userId                 String   @unique
+  user                   User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name                   String
+  address                String
+  city                   String
+  phone                  String
+  email                  String
+  licenseNo              String
+  accreditation          String?
+  isVerified             Boolean  @default(false)
+  rating                 Float    @default(5.0)
+  reviewCount            Int      @default(0)
+  turnaroundTimeNote     String   @default("24-48 hours")
+  homeCollectionAvailable Boolean  @default(true)
+  createdAt              DateTime @default(now())
+  updatedAt              DateTime @updatedAt
+
+  diagnosticTests DiagnosticTest[]
+  testBookings    TestBooking[]
+  reports         MedicalReport[]
+  referrals       Referral[]
+}
+
+model DiagnosticTest {
+  id                      String   @id @default(uuid())
+  labId                   String
+  laboratory              Laboratory @relation(fields: [labId], references: [id], onDelete: Cascade)
+  name                    String
+  code                    String
+  category                String
+  sampleType              String
+  turnaroundHours         Int      @default(24)
+  price                   Float
+  discountPrice           Float?
+  preparationInstructions String?
+  description             String?
+  parametersJson          String   @default("[]")
+  isAvailable             Boolean  @default(true)
+  createdAt               DateTime @default(now())
+  updatedAt               DateTime @updatedAt
+
+  testBookings TestBooking[]
+  referrals    Referral[]
+
+  @@index([category])
+}
+
+model Appointment {
+  id                String            @id @default(uuid())
+  appointmentNumber String            @unique
+  patientId         String
+  patient           PatientProfile    @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  doctorId          String
+  doctor            DoctorProfile     @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  clinicId          String?
+  clinic            Clinic?           @relation(fields: [clinicId], references: [id], onDelete: SetNull)
+  date              String
+  timeSlot          String
+  type              AppointmentType   @default(IN_PERSON)
+  status            AppointmentStatus @default(CONFIRMED)
+  symptoms          String?
+  notes             String?
+  feePaid           Float             @default(0.0)
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+
+  queueTicket QueueTicket?
+
+  @@index([patientId])
+  @@index([doctorId])
+  @@index([date])
+}
+
+model Queue {
+  id                     String      @id @default(uuid())
+  doctorId               String
+  doctor                 DoctorProfile @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  clinicId               String?
+  clinic                 Clinic?     @relation(fields: [clinicId], references: [id], onDelete: SetNull)
+  date                   String
+  currentTokenNumber     Int         @default(0)
+  status                 QueueStatus @default(ACTIVE)
+  averageConsultationMin Int         @default(15)
+  delayMinutes           Int         @default(0)
+  updatedAt              DateTime    @updatedAt
+
+  tickets QueueTicket[]
+
+  @@unique([doctorId, date])
+}
+
+model QueueTicket {
+  id            String            @id @default(uuid())
+  queueId       String
+  queue         Queue             @relation(fields: [queueId], references: [id], onDelete: Cascade)
+  appointmentId String            @unique
+  appointment   Appointment       @relation(fields: [appointmentId], references: [id], onDelete: Cascade)
+  patientId     String
+  tokenNumber   Int
+  estimatedTime String
+  status        QueueTicketStatus @default(WAITING)
+  checkInTime   DateTime?
+  calledTime    DateTime?
+  completedTime DateTime?
+
+  @@index([queueId])
+  @@index([patientId])
+}
+
+model Referral {
+  id           String           @id @default(uuid())
+  referralCode String           @unique
+  doctorId     String
+  doctor       DoctorProfile    @relation(fields: [doctorId], references: [id], onDelete: Cascade)
+  patientId    String
+  patient      PatientProfile   @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  labId        String?
+  laboratory   Laboratory?      @relation(fields: [labId], references: [id], onDelete: SetNull)
+  testId       String?
+  test         DiagnosticTest?  @relation(fields: [testId], references: [id], onDelete: SetNull)
+  notes        String?
+  priority     ReferralPriority @default(NORMAL)
+  status       ReferralStatus   @default(PENDING)
+  createdAt    DateTime         @default(now())
+  updatedAt    DateTime         @updatedAt
+
+  testBookings TestBooking[]
+}
+
+model TestBooking {
+  id                 String        @id @default(uuid())
+  bookingNumber      String        @unique
+  patientId          String
+  patient            PatientProfile @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  labId              String
+  laboratory         Laboratory    @relation(fields: [labId], references: [id], onDelete: Cascade)
+  testId             String
+  test               DiagnosticTest @relation(fields: [testId], references: [id], onDelete: Cascade)
+  referralId         String?
+  referral           Referral?     @relation(fields: [referralId], references: [id], onDelete: SetNull)
+  collectionType     String        @default("WALK_IN") // WALK_IN or HOME_COLLECTION
+  scheduledDate      String
+  scheduledTimeSlot  String
+  collectionAddress  String?
+  status             BookingStatus @default(CONFIRMED)
+  totalAmount        Float
+  createdAt          DateTime      @default(now())
+  updatedAt          DateTime      @updatedAt
+
+  sample  Sample?
+  reports MedicalReport[]
+
+  @@index([patientId])
+  @@index([labId])
+}
+
+model Sample {
+  id              String       @id @default(uuid())
+  testBookingId   String       @unique
+  testBooking     TestBooking  @relation(fields: [testBookingId], references: [id], onDelete: Cascade)
+  barcode         String       @unique
+  sampleType      String
+  collectedAt     DateTime?
+  collectedBy     String?
+  status          SampleStatus @default(COLLECTED)
+  temperature     String?
+  rejectionReason String?
+  updatedAt       DateTime     @updatedAt
+}
+
+model MedicalReport {
+  id                  String      @id @default(uuid())
+  testBookingId       String?
+  testBooking         TestBooking? @relation(fields: [testBookingId], references: [id], onDelete: SetNull)
+  patientId           String
+  patient             PatientProfile @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  labId               String?
+  laboratory          Laboratory? @relation(fields: [labId], references: [id], onDelete: SetNull)
+  doctorId            String?
+  doctor              DoctorProfile? @relation(fields: [doctorId], references: [id], onDelete: SetNull)
+  reportTitle         String
+  testCategory        String
+  fileUrl             String
+  fileName            String
+  fileSize            Int
+  mimeType            String      @default("application/pdf")
+  summary             String?
+  extractedFactsJson  String?     @default("[]")
+  aiAnalysisJson      String?     @default("{}")
+  status              String      @default("PUBLISHED")
+  publishedAt         DateTime    @default(now())
+  isSharedWithDoctor  Boolean     @default(true)
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+
+  @@index([patientId])
+}
+
+model Review {
+  id              String     @id @default(uuid())
+  patientId       String
+  patient         PatientProfile @relation(fields: [patientId], references: [id], onDelete: Cascade)
+  targetType      TargetType
+  targetId        String
+  rating          Int
+  comment         String
+  isVerifiedVisit Boolean    @default(true)
+  createdAt       DateTime   @default(now())
+
+  @@index([targetType, targetId])
+}
+
+model Notification {
+  id        String           @id @default(uuid())
+  userId    String
+  user      User             @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title     String
+  message   String
+  type      NotificationType @default(SYSTEM)
+  link      String?
+  isRead    Boolean          @default(false)
+  createdAt DateTime         @default(now())
+
+  @@index([userId])
+}
+
+model AuditLog {
+  id           String   @id @default(uuid())
+  userId       String?
+  user         User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+  action       String
+  resourceType String
+  resourceId   String?
+  ipAddress    String?
+  userAgent    String?
+  detailsJson  String?  @default("{}")
+  createdAt    DateTime @default(now())
+
+  @@index([action])
+  @@index([userId])
+}
