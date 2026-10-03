@@ -43,7 +43,7 @@ export const ClinicDoctorsPage: React.FC = () => {
 
               <div className="space-y-1 text-xs text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100 my-3">
                 <p>License: <strong className="font-mono">{doc.licenseNumber}</strong></p>
-                <p>Consultation Fee: <strong>${doc.consultationFee}</strong></p>
+                <p>Consultation Fee: <strong>₹{doc.consultationFee}</strong></p>
                 <p>Days: {doc.availability.join(', ')}</p>
               </div>
             </div>

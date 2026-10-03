@@ -40,14 +40,20 @@ export async function getDoctors(req: Request, res: Response) {
         isVerified: doc.isVerified,
         clinicId: doc.clinicId,
         clinicName: clinic ? clinic.name : 'Independent Specialist',
-        clinicAddress: clinic ? clinic.address : 'Portland, OR',
-        clinicCity: clinic ? clinic.city : 'Portland, OR',
-        area: doc.area || clinic?.area || 'Downtown / Pearl District',
-        latitude: doc.latitude || clinic?.latitude || 45.5231,
-        longitude: doc.longitude || clinic?.longitude || -122.6765,
+        clinicAddress: clinic ? clinic.address : 'Gomti Nagar, Lucknow, UP',
+        clinicCity: clinic ? clinic.city : 'Lucknow',
+        area: doc.area || clinic?.area || 'Gomti Nagar & Vibhuti Khand',
+        latitude: doc.latitude || clinic?.latitude || 26.8500,
+        longitude: doc.longitude || clinic?.longitude || 80.9990,
         availability,
       };
     });
+
+    const { area } = req.query;
+    if (area) {
+      const areaStr = String(area).toLowerCase();
+      filtered = filtered.filter(d => d.area.toLowerCase().includes(areaStr));
+    }
 
     if (specialty) {
       const specStr = String(specialty).toLowerCase();
@@ -128,9 +134,9 @@ export async function getDoctorById(req: Request, res: Response) {
         rating: doc.rating,
         reviewCount: doc.reviewCount,
         isVerified: doc.isVerified,
-        area: doc.area || clinic?.area || 'Downtown / Pearl District',
-        latitude: doc.latitude || clinic?.latitude || 45.5231,
-        longitude: doc.longitude || clinic?.longitude || -122.6765,
+        area: doc.area || clinic?.area || 'Gomti Nagar & Vibhuti Khand',
+        latitude: doc.latitude || clinic?.latitude || 26.8500,
+        longitude: doc.longitude || clinic?.longitude || 80.9990,
         clinic,
         availability,
         reviews

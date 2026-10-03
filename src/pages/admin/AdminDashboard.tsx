@@ -61,7 +61,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ navigate }) => {
             MediLink Executive Command
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
-            Audit provider credential verifications, monitor clinical appointments and diagnostic volumes across Oregon health networks.
+            Audit provider credential verifications, monitor clinical appointments and diagnostic volumes across Lucknow, Uttar Pradesh healthcare networks.
           </p>
         </div>
 

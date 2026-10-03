@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Modal } from './Modal.js';
-import { MapPin, Navigation, Check, Compass, AlertCircle, Loader2 } from 'lucide-react';
+import { MapPin, Navigation, Check, Compass, AlertCircle, Loader2, Search } from 'lucide-react';
 import { useLocation, PRESET_LOCAL_AREAS, LocalArea } from '../../contexts/LocationContext.js';
 
 interface LocationPickerModalProps {
@@ -23,12 +23,12 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen
   const [filterSearch, setFilterSearch] = useState('');
 
   const radiusOptions = [
-    { label: '5 miles', value: 5 },
-    { label: '10 miles', value: 10 },
-    { label: '15 miles', value: 15 },
-    { label: '25 miles', value: 25 },
-    { label: '50 miles', value: 50 },
-    { label: 'Any Distance', value: null },
+    { label: '2 km', value: 2 },
+    { label: '5 km', value: 5 },
+    { label: '10 km', value: 10 },
+    { label: '15 km', value: 15 },
+    { label: '25 km', value: 25 },
+    { label: 'All Lucknow', value: null },
   ];
 
   const handleUseGps = async () => {
@@ -47,16 +47,16 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen
   const filteredAreas = PRESET_LOCAL_AREAS.filter(
     (a) =>
       a.name.toLowerCase().includes(filterSearch.toLowerCase()) ||
-      a.city.toLowerCase().includes(filterSearch.toLowerCase()) ||
-      a.description.toLowerCase().includes(filterSearch.toLowerCase())
+      a.description.toLowerCase().includes(filterSearch.toLowerCase()) ||
+      (a.pincode && a.pincode.includes(filterSearch))
   );
 
   return (
     <Modal
       isOpen={isOpen}
       onClose={onClose}
-      title="Local Healthcare Area & Proximity"
-      subtitle="Find doctors, diagnostic laboratories, and clinics near your home or workplace"
+      title="Select Your Locality in Lucknow"
+      subtitle="Find OPD specialists, diagnostic labs, and clinics near your home or office in Lucknow"
       maxWidth="lg"
     >
       <div className="space-y-5">
@@ -70,8 +70,8 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen
               <p className="text-xs font-bold text-slate-900">Current Position</p>
               <p className="text-[11px] text-slate-600 font-medium">
                 {currentLocation.isLiveGps
-                  ? `Live GPS Active (${currentLocation.areaName})`
-                  : `Selected Area: ${currentLocation.areaName}`}
+                  ? `Live GPS Active (${currentLocation.areaName}, Lucknow)`
+                  : `Selected Locality: ${currentLocation.areaName}, Lucknow`}
               </p>
             </div>
           </div>
@@ -85,7 +85,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen
             {isLocating ? (
               <>
                 <Loader2 size={14} className="animate-spin" />
-                <span>Locating GPS...</span>
+                <span>Detecting GPS...</span>
               </>
             ) : (
               <>
@@ -106,7 +106,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen
         {/* Distance Radius Selector */}
         <div>
           <label className="block text-xs font-bold text-slate-700 mb-2">
-            Search Radius for Local Providers
+            Search Proximity Radius (km)
           </label>
           <div className="grid grid-cols-3 sm:grid-cols-6 gap-2">
             {radiusOptions.map((opt) => {
@@ -129,16 +129,28 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen
           </div>
         </div>
 
+        {/* Search localities */}
+        <div className="relative">
+          <Search size={15} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
+          <input
+            type="text"
+            value={filterSearch}
+            onChange={(e) => setFilterSearch(e.target.value)}
+            placeholder="Search Lucknow area or pincode (e.g. Gomti Nagar, 226010, Hazratganj)..."
+            className="w-full pl-9 pr-3 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+          />
+        </div>
+
         {/* Local Area Quick Selector */}
         <div>
           <div className="flex items-center justify-between mb-2">
             <label className="text-xs font-bold text-slate-700">
-              Select Neighborhood or Health District
+              Select Major Healthcare Hubs in Lucknow
             </label>
-            <span className="text-[10px] text-slate-400 font-medium">Oregon Metro Network</span>
+            <span className="text-[10px] text-slate-400 font-medium">Lucknow Metro Network</span>
           </div>
 
-          <div className="max-h-56 overflow-y-auto space-y-1.5 pr-1 divide-y divide-slate-100">
+          <div className="max-h-52 overflow-y-auto space-y-1.5 pr-1 divide-y divide-slate-100">
             {filteredAreas.map((area) => {
               const isCurrent =
                 !currentLocation.isLiveGps && currentLocation.areaName === area.name;
@@ -159,8 +171,15 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen
                       className={isCurrent ? 'text-blue-600 mt-0.5' : 'text-slate-400 mt-0.5'}
                     />
                     <div>
-                      <p className="text-xs font-bold text-slate-900">{area.name}</p>
-                      <p className="text-[11px] text-slate-500">{area.description}</p>
+                      <div className="flex items-center gap-2">
+                        <p className="text-xs font-bold text-slate-900">{area.name}</p>
+                        {area.pincode && (
+                          <span className="text-[10px] px-1.5 py-0.2 bg-slate-100 text-slate-600 rounded font-semibold">
+                            PIN {area.pincode}
+                          </span>
+                        )}
+                      </div>
+                      <p className="text-[11px] text-slate-500 mt-0.5">{area.description}</p>
                     </div>
                   </div>
 
@@ -178,7 +197,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen
         {/* Footer */}
         <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
           <p className="text-[11px] text-slate-400">
-            Coordinates: {currentLocation.lat.toFixed(4)}, {currentLocation.lng.toFixed(4)}
+            Coordinates: {currentLocation.lat.toFixed(4)}°N, {currentLocation.lng.toFixed(4)}°E (Lucknow, UP)
           </p>
 
           <div className="flex items-center gap-2">
@@ -194,7 +213,7 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen
               onClick={handleApply}
               className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm shadow-blue-500/20 cursor-pointer"
             >
-              Apply Area
+              Apply Locality
             </button>
           </div>
         </div>

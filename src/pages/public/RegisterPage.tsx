@@ -17,14 +17,14 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ navigate }) => {
 
   // Doctor specific fields
   const [specialty, setSpecialty] = useState('Cardiology');
-  const [qualification, setQualification] = useState('MD, FACC');
+  const [qualification, setQualification] = useState('MBBS, MD');
   const [licenseNumber, setLicenseNumber] = useState('');
-  const [consultationFee, setConsultationFee] = useState(100);
+  const [consultationFee, setConsultationFee] = useState(800);
 
   // Clinic specific fields
   const [clinicName, setClinicName] = useState('');
   const [address, setAddress] = useState('');
-  const [city, setCity] = useState('Portland, OR');
+  const [city, setCity] = useState('Lucknow, UP');
   const [registrationNo, setRegistrationNo] = useState('');
 
   // Lab specific fields

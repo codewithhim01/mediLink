@@ -4,9 +4,15 @@ let socketInstance: Socket | null = null;
 
 export function getSocket(): Socket {
   if (!socketInstance) {
-    socketInstance = io(window.location.origin, {
+    socketInstance = io(typeof window !== 'undefined' ? window.location.origin : '', {
       autoConnect: true,
-      transports: ['websocket', 'polling'],
+      transports: ['polling', 'websocket'],
+      reconnectionAttempts: 3,
+      timeout: 4000,
+    });
+
+    socketInstance.on('connect_error', () => {
+      // Gracefully ignore WebSocket/polling connection errors in preview iframes
     });
   }
   return socketInstance;

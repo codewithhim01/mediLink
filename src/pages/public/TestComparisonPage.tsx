@@ -1,10 +1,12 @@
-import React, { useState, useEffect } from 'react';
-import { Search, Filter, TestTube2, Clock, Home, Building2, ArrowUpDown, CheckCircle2, ShieldCheck } from 'lucide-react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { Search, Filter, TestTube2, Clock, Home, Building2, ArrowUpDown, CheckCircle2, ShieldCheck, MapPin, Navigation } from 'lucide-react';
 import { api } from '../../services/api.js';
 import { DiagnosticTest } from '../../types/index.js';
 import { Badge } from '../../components/common/Badge.js';
 import { BookTestModal } from '../../components/patient/BookTestModal.js';
 import { useAuth } from '../../contexts/AuthContext.js';
+import { useLocation } from '../../contexts/LocationContext.js';
+import { LocationPickerModal } from '../../components/common/LocationPickerModal.js';
 
 interface TestComparisonPageProps {
   navigate: (path: string) => void;
@@ -17,7 +19,8 @@ export const TestComparisonPage: React.FC<TestComparisonPageProps> = ({
   initialSearch = '',
   initialCategory = '',
 }) => {
-  const { isAuthenticated, switchDemoRole } = useAuth();
+  const { isAuthenticated } = useAuth();
+  const { currentLocation, selectedRadius, formatDistance, calculateDistance, isWithinRadius } = useLocation();
   const [tests, setTests] = useState<DiagnosticTest[]>([]);
   const [loading, setLoading] = useState(true);
 
@@ -26,6 +29,8 @@ export const TestComparisonPage: React.FC<TestComparisonPageProps> = ({
   const [category, setCategory] = useState(initialCategory);
   const [maxTAT, setMaxTAT] = useState<number | ''>('');
   const [sort, setSort] = useState<string>('price_asc');
+  const [filterByRadius, setFilterByRadius] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
 
   // Booking modal
   const [selectedTest, setSelectedTest] = useState<DiagnosticTest | null>(null);
@@ -39,7 +44,6 @@ export const TestComparisonPage: React.FC<TestComparisonPageProps> = ({
       if (search) params.search = search;
       if (category) params.category = category;
       if (maxTAT) params.maxTAT = maxTAT;
-      if (sort) params.sort = sort;
 
       const res = await api.getDiagnosticTests(params);
       if (res.success && res.data) {
@@ -54,17 +58,14 @@ export const TestComparisonPage: React.FC<TestComparisonPageProps> = ({
 
   useEffect(() => {
     fetchTests();
-  }, [category, maxTAT, sort]);
+  }, [category, maxTAT]);
 
   const handleSearchSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     fetchTests();
   };
 
-  const handleBookTest = async (test: DiagnosticTest) => {
-    if (!isAuthenticated) {
-      await switchDemoRole('PATIENT');
-    }
+  const handleBookTest = (test: DiagnosticTest) => {
     setSelectedTest(test);
     setIsBookModalOpen(true);
   };
@@ -75,47 +76,116 @@ export const TestComparisonPage: React.FC<TestComparisonPageProps> = ({
     'Biochemistry & Renal/Hepatic',
     'Endocrinology & Diabetes',
     'Endocrinology & Thyroid',
-    'Hematology & Ferritin'
+    'Hematology'
   ];
 
+  // Dynamic sorting and location processing
+  const processedTests = useMemo(() => {
+    let result = [...tests];
+
+    if (filterByRadius && selectedRadius !== null) {
+      const within = result.filter(t => isWithinRadius(t.latitude, t.longitude));
+      if (within.length > 0) {
+        result = within;
+      }
+    }
+
+    result.sort((a, b) => {
+      const priceA = a.discountPrice ?? a.price;
+      const priceB = b.discountPrice ?? b.price;
+
+      if (sort === 'nearest') {
+        const distA = calculateDistance(a.latitude, a.longitude) ?? 9999;
+        const distB = calculateDistance(b.latitude, b.longitude) ?? 9999;
+        return distA - distB;
+      }
+      if (sort === 'price_asc') {
+        return priceA - priceB;
+      }
+      if (sort === 'price_desc') {
+        return priceB - priceA;
+      }
+      if (sort === 'tat_asc') {
+        return a.turnaroundHours - b.turnaroundHours;
+      }
+      if (sort === 'rating_desc') {
+        return (b.laboratoryRating || 0) - (a.laboratoryRating || 0);
+      }
+      return 0;
+    });
+
+    return result;
+  }, [tests, filterByRadius, selectedRadius, sort, currentLocation]);
+
   return (
-    <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8 space-y-6">
-      {/* Title */}
-      <div>
-        <h1 className="text-2xl sm:text-3xl font-black text-slate-900">
-          Compare Diagnostic Tests & Pricing
-        </h1>
-        <p className="text-xs sm:text-sm text-slate-500 mt-1">
-          Directly compare diagnostic panels across CLIA/CAP certified laboratories by turnaround time, cost, and home collection.
-        </p>
+    <div className="p-4 sm:p-6 lg:p-8 space-y-6 max-w-7xl mx-auto">
+      {/* Title Bar */}
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 tracking-tight">
+            Diagnostic Pathology Tests in Lucknow
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 mt-1">
+            Compare tests side-by-side across NABL & ICMR accredited laboratories in Lucknow with transparent pricing in Rupees (₹).
+          </p>
+        </div>
+
+        {/* Location Indicator */}
+        <button
+          onClick={() => setShowLocationModal(true)}
+          className="px-3.5 py-2 bg-teal-50 hover:bg-teal-100 text-teal-900 border border-teal-200 rounded-xl text-xs font-bold flex items-center gap-2 transition-colors cursor-pointer shadow-2xs shrink-0"
+        >
+          <MapPin size={15} className="text-teal-600 shrink-0" />
+          <span>Near {currentLocation.areaName}</span>
+          <span className="text-[10px] bg-teal-200/70 text-teal-800 px-1.5 py-0.5 rounded-full">
+            {selectedRadius ? `${selectedRadius} km` : 'All Lucknow'}
+          </span>
+          <span className="text-teal-700 underline text-[11px] ml-1">Change</span>
+        </button>
       </div>
 
       {successNotice && (
-        <div className="p-4 bg-emerald-50 border border-emerald-200 rounded-2xl text-xs text-emerald-800 font-semibold flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <CheckCircle2 size={16} className="text-emerald-600" />
-            <span>{successNotice}</span>
-          </div>
-          <button
-            onClick={() => navigate('/patient/lab-bookings')}
-            className="text-emerald-700 underline font-bold"
-          >
-            Track Specimen Status
-          </button>
+        <div className="p-3.5 bg-emerald-50 border border-emerald-200 rounded-xl text-xs text-emerald-800 font-semibold flex items-center gap-2 animate-in fade-in">
+          <CheckCircle2 size={16} className="text-emerald-600 shrink-0" />
+          <span>{successNotice}</span>
         </div>
       )}
 
-      {/* Search & Filter Bar */}
-      <div className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs space-y-3">
-        <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row items-center gap-3">
-          <div className="relative flex-1 w-full">
+      {/* Lucknow Location Banner */}
+      <div className="p-3.5 bg-gradient-to-r from-teal-50/90 via-slate-50 to-blue-50/70 border border-teal-100 rounded-2xl flex flex-col md:flex-row items-start md:items-center justify-between gap-3 text-xs">
+        <div className="flex items-center gap-2.5">
+          <div className="w-8 h-8 rounded-xl bg-teal-600 text-white flex items-center justify-center shrink-0 shadow-xs">
+            <ShieldCheck size={16} />
+          </div>
+          <div>
+            <p className="font-bold text-slate-900">
+              NABL Certified Labs near <span className="text-teal-700">{currentLocation.areaName}, Lucknow</span>
+            </p>
+            <p className="text-[11px] text-slate-500">
+              Free home phlebotomy blood draw available across Lucknow. Standard reports delivered within 6 to 12 hours.
+            </p>
+          </div>
+        </div>
+
+        <button
+          onClick={() => setShowLocationModal(true)}
+          className="text-xs text-teal-700 font-bold hover:underline cursor-pointer"
+        >
+          Switch Locality / Distance
+        </button>
+      </div>
+
+      {/* Search & Filter Card */}
+      <div className="bg-white p-4 rounded-2xl border border-slate-200/80 shadow-xs space-y-4">
+        <form onSubmit={handleSearchSubmit} className="flex flex-col sm:flex-row gap-2">
+          <div className="relative flex-1">
             <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
             <input
               type="text"
               value={search}
               onChange={(e) => setSearch(e.target.value)}
-              placeholder="Search tests (e.g. Lipid, HbA1c, CMP, Thyroid) or laboratory name..."
-              className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 rounded-xl border border-slate-200 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500"
+              placeholder="Search diagnostic test (e.g. Lipid Profile, HbA1c, Thyroid, CBC, KFT)..."
+              className="w-full pl-10 pr-4 py-2 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-teal-500 font-medium"
             />
           </div>
           <button
@@ -137,7 +207,7 @@ export const TestComparisonPage: React.FC<TestComparisonPageProps> = ({
             onChange={(e) => setCategory(e.target.value === 'All Categories' ? '' : e.target.value)}
             className="p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:bg-white"
           >
-            {categories.map(c => (
+            {categories.map((c) => (
               <option key={c} value={c}>{c}</option>
             ))}
           </select>
@@ -148,9 +218,9 @@ export const TestComparisonPage: React.FC<TestComparisonPageProps> = ({
             className="p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:bg-white"
           >
             <option value="">Max Turnaround: Any</option>
+            <option value="8">Under 8 Hours</option>
             <option value="12">Under 12 Hours</option>
             <option value="24">Under 24 Hours</option>
-            <option value="48">Under 48 Hours</option>
           </select>
 
           <div className="flex items-center gap-1 ml-auto">
@@ -159,10 +229,11 @@ export const TestComparisonPage: React.FC<TestComparisonPageProps> = ({
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value)}
-              className="p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-semibold text-slate-700 focus:bg-white"
+              className="p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-teal-900 focus:bg-white"
             >
-              <option value="price_asc">Price: Low to High</option>
-              <option value="price_desc">Price: High to Low</option>
+              <option value="nearest">Nearest Lab to Me (km)</option>
+              <option value="price_asc">Price: Low to High (₹)</option>
+              <option value="price_desc">Price: High to Low (₹)</option>
               <option value="tat_asc">Fastest Turnaround (TAT)</option>
               <option value="rating_desc">Highest Rated Lab</option>
             </select>
@@ -170,24 +241,25 @@ export const TestComparisonPage: React.FC<TestComparisonPageProps> = ({
         </div>
       </div>
 
-      {/* Test Comparison Table / Cards */}
+      {/* Test Comparison Cards */}
       {loading ? (
         <div className="space-y-4">
-          {[1, 2, 3].map(n => (
+          {[1, 2, 3].map((n) => (
             <div key={n} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-xs animate-pulse h-32" />
           ))}
         </div>
-      ) : tests.length === 0 ? (
+      ) : processedTests.length === 0 ? (
         <div className="p-12 text-center bg-white rounded-2xl border border-slate-200">
           <TestTube2 size={36} className="mx-auto text-slate-300 mb-3" />
-          <p className="text-sm font-bold text-slate-800">No diagnostic tests match your query</p>
+          <p className="text-sm font-bold text-slate-800">No diagnostic tests match your query in {currentLocation.areaName}</p>
           <p className="text-xs text-slate-500 mt-1">Try resetting the category filter or searching with different keywords.</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {tests.map(test => {
+          {processedTests.map((test) => {
             const effectivePrice = test.discountPrice !== undefined && test.discountPrice !== null ? test.discountPrice : test.price;
             const hasDiscount = test.discountPrice !== undefined && test.discountPrice !== null && test.discountPrice < test.price;
+            const distStr = formatDistance(test.latitude, test.longitude);
 
             return (
               <div
@@ -203,6 +275,12 @@ export const TestComparisonPage: React.FC<TestComparisonPageProps> = ({
                     <span className="text-[11px] font-mono text-slate-400">
                       Code: {test.code}
                     </span>
+                    {distStr && (
+                      <span className="px-2 py-0.5 rounded-full bg-blue-50 text-blue-800 text-[10px] font-bold flex items-center gap-1">
+                        <MapPin size={10} className="text-blue-600" />
+                        {distStr}
+                      </span>
+                    )}
                   </div>
 
                   <h3 className="text-base font-bold text-slate-900">{test.name}</h3>
@@ -218,7 +296,7 @@ export const TestComparisonPage: React.FC<TestComparisonPageProps> = ({
                     </span>
                     <span className="flex items-center gap-1 font-semibold text-blue-700">
                       <Clock size={13} />
-                      {test.turnaroundHours} Hours TAT Guarantee
+                      {test.turnaroundHours} Hours Digital Report
                     </span>
                     <span className="flex items-center gap-1 text-slate-600">
                       <TestTube2 size={13} className="text-slate-400" />
@@ -227,26 +305,26 @@ export const TestComparisonPage: React.FC<TestComparisonPageProps> = ({
                     {test.homeCollectionAvailable && (
                       <span className="flex items-center gap-1 text-emerald-700 font-semibold">
                         <Home size={13} />
-                        Home Draw Available
+                        Free Home Sample Collection in Lucknow
                       </span>
                     )}
                   </div>
                 </div>
 
-                {/* Pricing & Booking Action */}
+                {/* Pricing & Booking Action in INR (₹) */}
                 <div className="flex md:flex-col items-center md:items-end justify-between w-full md:w-auto pt-3 md:pt-0 border-t md:border-t-0 border-slate-100 shrink-0">
                   <div className="text-left md:text-right">
                     <div className="flex items-baseline gap-1.5">
-                      <span className="text-2xl font-black text-slate-900">${effectivePrice}</span>
+                      <span className="text-2xl font-black text-slate-900">₹{effectivePrice}</span>
                       {hasDiscount && (
                         <span className="text-xs line-through text-slate-400 font-medium">
-                          ${test.price}
+                          ₹{test.price}
                         </span>
                       )}
                     </div>
                     {hasDiscount && (
                       <span className="text-[10px] font-bold text-emerald-600 block">
-                        Save ${test.price - effectivePrice} (Promotion)
+                        Save ₹{test.price - effectivePrice} (Promotion)
                       </span>
                     )}
                   </div>
@@ -255,7 +333,7 @@ export const TestComparisonPage: React.FC<TestComparisonPageProps> = ({
                     onClick={() => handleBookTest(test)}
                     className="mt-2 px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shadow-teal-500/20 flex items-center gap-1.5 cursor-pointer"
                   >
-                    <span>Book Diagnostic Test</span>
+                    <span>Book Test</span>
                   </button>
                 </div>
               </div>
@@ -270,8 +348,13 @@ export const TestComparisonPage: React.FC<TestComparisonPageProps> = ({
         isOpen={isBookModalOpen}
         onClose={() => setIsBookModalOpen(false)}
         onSuccess={(booking) => {
-          setSuccessNotice(`Test booking ${booking.bookingNumber} confirmed! Sample barcode ${booking.sample?.barcode || 'SMP-BC'} generated.`);
+          setSuccessNotice(`Test booking ${booking.bookingNumber} confirmed! Phlebotomist will contact for collection.`);
         }}
+      />
+
+      <LocationPickerModal
+        isOpen={showLocationModal}
+        onClose={() => setShowLocationModal(false)}
       />
     </div>
   );

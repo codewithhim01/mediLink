@@ -173,9 +173,9 @@ export const LabDetailPage: React.FC<LabDetailPageProps> = ({ labId, navigate })
 
                   <div className="flex items-center gap-4 self-end md:self-center shrink-0">
                     <div className="text-right">
-                      <span className="text-lg font-black text-slate-900">${effectivePrice}</span>
+                      <span className="text-lg font-black text-slate-900">₹{effectivePrice}</span>
                       {hasDiscount && (
-                        <span className="text-xs text-slate-400 line-through block">${test.price}</span>
+                        <span className="text-xs text-slate-400 line-through block">₹{test.price}</span>
                       )}
                     </div>
 

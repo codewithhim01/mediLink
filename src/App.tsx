@@ -172,12 +172,12 @@ const AppContent: React.FC = () => {
       <Navbar currentPath={currentPath} navigate={navigate} />
 
       {isDashboardRoute && isAuthenticated && user ? (
-        <div className="flex-1 flex overflow-hidden">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
           <Sidebar currentPath={currentPath} navigate={navigate} />
-          <main className="flex-1 overflow-y-auto">{renderCurrentView()}</main>
+          <main className="flex-1 overflow-y-auto w-full min-w-0">{renderCurrentView()}</main>
         </div>
       ) : (
-        <main className="flex-1">{renderCurrentView()}</main>
+        <main className="flex-1 w-full min-w-0">{renderCurrentView()}</main>
       )}
     </div>
   );

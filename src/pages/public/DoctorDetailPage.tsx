@@ -62,10 +62,7 @@ export const DoctorDetailPage: React.FC<DoctorDetailPageProps> = ({ doctorId, na
     fetchDoctor();
   }, [doctorId]);
 
-  const handleBook = async () => {
-    if (!isAuthenticated) {
-      await switchDemoRole('PATIENT');
-    }
+  const handleBook = () => {
     setIsBookModalOpen(true);
   };
 
@@ -175,7 +172,7 @@ export const DoctorDetailPage: React.FC<DoctorDetailPageProps> = ({ doctorId, na
           <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pt-4 sm:pt-0 border-t sm:border-t-0 border-slate-100">
             <div className="text-left sm:text-right">
               <span className="text-xs font-semibold text-slate-500">Consultation Fee</span>
-              <p className="text-3xl font-black text-slate-900">${doctor.consultationFee}</p>
+              <p className="text-3xl font-black text-slate-900">₹{doctor.consultationFee}</p>
               <span className="text-[11px] text-slate-400">{doctor.consultationDuration} min consultation</span>
             </div>
 
@@ -206,13 +203,13 @@ export const DoctorDetailPage: React.FC<DoctorDetailPageProps> = ({ doctorId, na
               <MapPin size={15} className="text-blue-600" /> Clinic Location
             </h4>
             <p className="text-xs font-semibold text-slate-800">
-              {doctor.clinic?.name || 'Metro Health Specialist Center'}
+              {doctor.clinic?.name || 'Awadh Mediplex & Heart Institute'}
             </p>
             <p className="text-xs text-slate-500 mt-0.5">
-              {doctor.clinic?.address || '100 Medical Center Way'}, {doctor.clinic?.city || 'Portland, OR'}
+              {doctor.clinic?.address || 'Vibhuti Khand, Gomti Nagar'}, {doctor.clinic?.city || 'Lucknow, UP'}
             </p>
             <p className="text-[11px] text-slate-400 mt-1">
-              Ph: {doctor.clinic?.phone || '+1 (555) 902-1200'}
+              Ph: {doctor.clinic?.phone || '+91 522 409 1200'}
             </p>
           </div>
 

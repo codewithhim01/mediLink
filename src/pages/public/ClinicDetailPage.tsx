@@ -184,7 +184,7 @@ export const ClinicDetailPage: React.FC<ClinicDetailPageProps> = ({ clinicId, na
                   <h4 className="text-sm font-bold text-slate-900">{doc.name}</h4>
                   <p className="text-xs font-semibold text-blue-700">{doc.specialty}</p>
                   <p className="text-xs text-slate-600 mt-1">
-                    Fee: <strong>${doc.fee}</strong> • Rating: {doc.rating} ⭐ ({doc.reviewCount} reviews)
+                    Fee: <strong>₹{doc.fee}</strong> • Rating: {doc.rating} ⭐ ({doc.reviewCount} reviews)
                   </p>
                 </div>
 

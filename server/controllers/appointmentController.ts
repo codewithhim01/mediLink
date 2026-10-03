@@ -53,7 +53,7 @@ export async function getAppointments(req: AuthenticatedRequest, res: Response) 
         doctorName: docUser ? docUser.name : 'Unknown Doctor',
         doctorSpecialty: docProf?.specialty,
         clinicName: clinic ? clinic.name : 'Specialist Practice',
-        clinicAddress: clinic ? clinic.address : 'Portland, OR',
+        clinicAddress: clinic ? clinic.address : 'Lucknow, UP',
         queueTicket: ticket ? {
           id: ticket.id,
           queueId: ticket.queueId,

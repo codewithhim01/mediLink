@@ -97,10 +97,10 @@ export const BookTestModal: React.FC<BookTestModalProps> = ({
             )}
           </div>
           <div className="text-right">
-            <span className="text-lg font-black text-teal-900">${price}</span>
+            <span className="text-lg font-black text-teal-900">₹{price}</span>
             {test.discountPrice && (
               <span className="block text-[10px] line-through text-slate-400">
-                ${test.price}
+                ₹{test.price}
               </span>
             )}
           </div>

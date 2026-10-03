@@ -107,12 +107,12 @@ export class AIReportService {
         specialty: doc.specialty,
         subSpecialty: doc.subSpecialty,
         clinicName: clinic ? clinic.name : 'MediLink Specialist Network',
-        clinicAddress: clinic ? clinic.address : 'Portland, OR',
+        clinicAddress: clinic ? clinic.address : 'Lucknow, UP',
         fees: doc.consultationFee,
         rating: doc.rating,
         reviewCount: doc.reviewCount,
         availability,
-        location: clinic ? clinic.city : 'Portland, OR'
+        location: clinic ? clinic.city : 'Lucknow, UP'
       };
 
       if (isMatch) {
@@ -147,7 +147,7 @@ export class AIReportService {
         labName: lab ? lab.name : 'Accredited Diagnostics',
         labAddress: lab ? lab.address : 'Metro Medical Area',
         homeCollectionAvailable: lab ? lab.homeCollectionAvailable : true,
-        location: lab ? lab.city : 'Portland, OR'
+        location: lab ? lab.city : 'Lucknow, UP'
       };
 
       if (isMatch) {

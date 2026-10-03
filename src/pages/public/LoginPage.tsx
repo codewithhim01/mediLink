@@ -72,12 +72,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
           </div>
         )}
 
-        {/* 1-Click Quick Demo Switcher */}
+        {/* Quick Fill Credentials */}
         <div className="p-3.5 bg-slate-50 rounded-2xl border border-slate-200/80">
           <div className="flex items-center gap-1.5 mb-2.5">
             <Sparkles size={14} className="text-blue-600" />
             <span className="text-[11px] font-bold uppercase tracking-wider text-slate-700">
-              1-Click Demo Logins (All 5 Roles)
+              Quick Fill Credentials (By Role)
             </span>
           </div>
 

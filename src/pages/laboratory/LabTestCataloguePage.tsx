@@ -175,11 +175,11 @@ export const LabTestCataloguePage: React.FC = () => {
                 <div className="flex items-center gap-4 self-end md:self-center">
                   <div className="text-right">
                     <span className="text-lg font-black text-slate-900">
-                      ${test.discountPrice || test.price}
+                      ₹{test.discountPrice || test.price}
                     </span>
                     {test.discountPrice && (
                       <span className="text-xs text-slate-400 line-through block">
-                        ${test.price}
+                        ₹{test.price}
                       </span>
                     )}
                   </div>
@@ -268,7 +268,7 @@ export const LabTestCataloguePage: React.FC = () => {
 
           <div className="grid grid-cols-3 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Standard Price ($)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Standard Price (₹)</label>
               <input
                 type="number"
                 value={price}
@@ -278,7 +278,7 @@ export const LabTestCataloguePage: React.FC = () => {
               />
             </div>
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Discount Price ($)</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">Discount Price (₹)</label>
               <input
                 type="number"
                 value={discountPrice}

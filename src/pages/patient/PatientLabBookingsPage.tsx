@@ -105,7 +105,7 @@ export const PatientLabBookingsPage: React.FC<PatientLabBookingsPageProps> = ({ 
                   </div>
 
                   <div className="text-left sm:text-right">
-                    <span className="text-lg font-black text-slate-900">${b.totalAmount}</span>
+                    <span className="text-lg font-black text-slate-900">₹{b.totalAmount}</span>
                     <span className="text-[11px] text-slate-500 block">
                       Scheduled: {b.scheduledDate} at {b.scheduledTimeSlot}
                     </span>

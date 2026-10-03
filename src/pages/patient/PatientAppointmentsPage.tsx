@@ -127,7 +127,7 @@ export const PatientAppointmentsPage: React.FC = () => {
 
                     <p className="text-[11px] text-blue-700 font-semibold">{apt.doctorSpecialty} • {apt.clinicName}</p>
                     <p className="text-xs text-slate-600 mt-1">
-                      📅 Date: <strong>{apt.date}</strong> at <strong>{apt.timeSlot}</strong> ({apt.type}) • Fee: ${apt.feePaid}
+                      📅 Date: <strong>{apt.date}</strong> at <strong>{apt.timeSlot}</strong> ({apt.type}) • Fee: ₹{apt.feePaid}
                     </p>
                     {apt.symptoms && (
                       <p className="text-[11px] text-slate-500 mt-0.5">

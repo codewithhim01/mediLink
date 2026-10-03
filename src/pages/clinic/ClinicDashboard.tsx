@@ -35,10 +35,10 @@ export const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ navigate }) =>
             Healthcare Center Operations
           </span>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-            {profile?.name || 'Metro Health Specialist Center'}
+            {profile?.name || 'Awadh Mediplex & Heart Institute'}
           </h1>
           <p className="text-xs sm:text-sm text-indigo-100 max-w-xl">
-            {profile?.address || '100 Medical Center Way'}, {profile?.city || 'Portland, OR'} • Reg: {profile?.registrationNo || 'OR-MED-2022'}
+            {profile?.address || 'Vibhuti Khand, Gomti Nagar'}, {profile?.city || 'Lucknow, UP'} • Reg: {profile?.registrationNo || 'UP-LKO-CLINIC-2022'}
           </p>
         </div>
 
@@ -118,7 +118,7 @@ export const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ navigate }) =>
               </div>
 
               <div className="text-xs text-slate-500 space-y-0.5 pt-1 border-t border-slate-200/60">
-                <p>Consultation Fee: <strong>${doc.consultationFee}</strong></p>
+                <p>Consultation Fee: <strong>₹{doc.consultationFee}</strong></p>
                 <p>Days: {doc.availability.slice(0, 3).join(', ')}</p>
               </div>
             </div>

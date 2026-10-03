@@ -157,7 +157,7 @@ export const DoctorProfilePage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Consultation Fee ($ USD)</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Consultation Fee (₹ INR)</label>
             <input
               type="number"
               value={consultationFee}

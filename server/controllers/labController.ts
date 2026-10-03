@@ -83,10 +83,13 @@ export async function getDiagnosticTests(req: Request, res: Response) {
         ...t,
         parameters,
         effectivePrice: t.discountPrice !== undefined && t.discountPrice !== null ? t.discountPrice : t.price,
-        laboratoryName: lab ? lab.name : 'MediLink Partner Lab',
-        laboratoryAddress: lab ? lab.address : 'Portland, OR',
-        laboratoryCity: lab ? lab.city : 'Portland, OR',
-        laboratoryRating: lab ? lab.rating : 5.0,
+        laboratoryName: lab ? lab.name : 'Awadh Diagnostics & Pathology',
+        laboratoryAddress: lab ? lab.address : 'Vibhuti Khand, Gomti Nagar, Lucknow, UP',
+        laboratoryCity: lab ? lab.city : 'Lucknow',
+        laboratoryArea: lab?.area || 'Gomti Nagar & Vibhuti Khand',
+        latitude: lab?.latitude || 26.8500,
+        longitude: lab?.longitude || 80.9990,
+        laboratoryRating: lab ? lab.rating : 4.9,
         homeCollectionAvailable: lab ? lab.homeCollectionAvailable : true,
       };
     });

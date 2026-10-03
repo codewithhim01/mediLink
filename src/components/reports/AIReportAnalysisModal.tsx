@@ -45,11 +45,13 @@ export const AIReportAnalysisModal: React.FC<AIReportAnalysisModalProps> = ({
   // Pre-load demo test reports for instant patient testing without requiring external files
   const loadSampleReport = (type: 'lipid' | 'metabolic' | 'iron') => {
     if (type === 'lipid') {
-      setFileName('LabCorp_Lipid_Cardiovascular_Panel_2026.pdf');
-      setReportText(`LABCORP DIAGNOSTICS & PATHOLOGY SERVICES
-Date of Service: 2026-09-15 | Specimen: Venous Serum
-Patient: Miller, Johnathan | DOB: 1988-06-14 | Sex: Male
-Test Ordered: Comprehensive Lipid Panel + High-Sensitivity CRP
+      setFileName('Awadh_Lipid_Cardiovascular_Profile_2026.pdf');
+      setReportText(`AWADH DIAGNOSTICS & PATHOLOGY LABS (LUCKNOW)
+NABL Accredited & ICMR Approved Reference Lab | Vibhuti Khand, Gomti Nagar
+Date of Collection: 2026-09-15 | Specimen: Venous Serum
+Patient: Sharma, Rahul | Age: 36 Yrs | Sex: Male
+Referred by: Dr. Ananya Srivastava, MD, DM
+Test Ordered: Comprehensive Lipid Profile + High-Sensitivity Cardiac CRP
 
 TEST RESULTS:
 Total Cholesterol: 238 mg/dL [Reference Range: 125 - 200 mg/dL] - HIGH
@@ -59,13 +61,13 @@ Triglycerides: 152 mg/dL [Reference Range: < 150 mg/dL] - BORDERLINE HIGH
 hs-CRP (Cardiac C-Reactive Protein): 2.8 mg/L [Reference Range: < 1.0 mg/L Low Risk] - HIGH
 
 IMPRESSION & FINDINGS:
-Patient presents with mixed dyslipidemia characterized by elevated LDL-C and borderline triglycerides. Concomitant elevation of hs-CRP at 2.8 mg/L suggests systemic vascular inflammation and moderately elevated ASCVD risk. Follow-up consultation with primary physician or cardiologist recommended for evaluation of statin therapy and dietary counseling.`);
+Patient presents with mixed dyslipidemia characterized by elevated LDL-C and borderline triglycerides. Concomitant elevation of hs-CRP at 2.8 mg/L suggests systemic vascular inflammation and moderately elevated ASCVD risk. Follow-up consultation with primary physician or cardiologist in Lucknow recommended for evaluation of statin therapy and dietary counseling.`);
     } else if (type === 'metabolic') {
-      setFileName('Quest_CMP_and_HbA1c_Screening.pdf');
-      setReportText(`QUEST DIAGNOSTICS LABORATORY
+      setFileName('Shubham_KFT_and_HbA1c_Screening.pdf');
+      setReportText(`SHUBHAM ADVANCED IMAGING & DIAGNOSTICS (HAZRATGANJ, LUCKNOW)
 Date: 2026-09-20 | Specimen: Blood EDTA & Serum
-Patient: Miller, Johnathan
-Test: Glycated Hemoglobin (HbA1c) & Comprehensive Metabolic Panel
+Patient: Sharma, Rahul
+Test: Glycated Hemoglobin (HbA1c) & Renal/Kidney Function Panel (KFT)
 
 RESULTS:
 Fasting Blood Glucose: 118 mg/dL [Reference: 70 - 99 mg/dL] - HIGH
@@ -73,20 +75,21 @@ HbA1c: 6.1 % [Reference: < 5.7 % Normal; 5.7 - 6.4 % Prediabetes] - HIGH
 Estimated Average Glucose: 128 mg/dL [Reference: 97 - 126 mg/dL]
 eGFR: 88 mL/min/1.73m2 [Reference: > 60 mL/min] - NORMAL
 Serum Creatinine: 0.9 mg/dL [Reference: 0.7 - 1.3 mg/dL] - NORMAL
-BUN: 14 mg/dL [Reference: 7 - 20 mg/dL] - NORMAL
+Blood Urea: 24 mg/dL [Reference: 15 - 40 mg/dL] - NORMAL
 
 IMPRESSION:
 Elevated fasting plasma glucose and glycated hemoglobin meeting criteria for impaired glucose tolerance / prediabetes.`);
     } else {
-      setFileName('Hematology_CBC_Ferritin_Panel.pdf');
-      setReportText(`METRO PATHOLOGY LABS
+      setFileName('Awadh_CBC_and_Ferritin_Panel.pdf');
+      setReportText(`AWADH DIAGNOSTICS LABORATORY (LUCKNOW)
 Date: 2026-09-25
+Patient: Sharma, Rahul
 Test: Complete Blood Count (CBC) & Serum Ferritin
-Hemoglobin: 14.2 g/dL [Reference: 13.5 - 17.5 g/dL] - NORMAL
-WBC: 6.8 x10^3/uL [Reference: 4.5 - 11.0 x10^3/uL] - NORMAL
-Platelet Count: 245 x10^3/uL [Reference: 150 - 450 x10^3/uL] - NORMAL
-Serum Ferritin: 18 ng/mL [Reference: 30 - 400 ng/mL] - LOW
-FINDING: Depleted bone marrow iron reserves despite normal circulating hemoglobin.`);
+Hemoglobin: 14.2 g/dL [Reference: 13.0 - 17.0 g/dL] - NORMAL
+TLC: 6.8 x10^3/uL [Reference: 4.0 - 11.0 x10^3/uL] - NORMAL
+Platelet Count: 2.45 lakh/cumm [Reference: 1.5 - 4.5 lakh/cumm] - NORMAL
+Serum Ferritin: 18 ng/mL [Reference: 30 - 350 ng/mL] - LOW
+FINDING: Depleted iron reserves despite normal circulating hemoglobin.`);
     }
   };
 
@@ -454,7 +457,7 @@ FINDING: Depleted bone marrow iron reserves despite normal circulating hemoglobi
                             <p className="text-xs font-bold text-slate-900">{doc.doctorName}</p>
                             <p className="text-[11px] text-blue-700 font-semibold">{doc.specialty}</p>
                           </div>
-                          <span className="text-xs font-black text-slate-800">${doc.fees}</span>
+                          <span className="text-xs font-black text-slate-800">₹{doc.fees}</span>
                         </div>
                         <p className="text-[11px] text-slate-500 mt-1">
                           {doc.clinicName} • {doc.location}
@@ -495,7 +498,7 @@ FINDING: Depleted bone marrow iron reserves despite normal circulating hemoglobi
                         <div className="flex items-start justify-between">
                           <p className="text-xs font-bold text-slate-900 line-clamp-1">{t.testName}</p>
                           <span className="text-xs font-black text-teal-800">
-                            ${t.discountPrice || t.price}
+                            ₹{t.discountPrice || t.price}
                           </span>
                         </div>
                         <p className="text-[11px] text-slate-500 mt-1">

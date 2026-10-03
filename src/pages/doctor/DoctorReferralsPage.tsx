@@ -187,7 +187,7 @@ export const DoctorReferralsPage: React.FC = () => {
             >
               {tests.map(t => (
                 <option key={t.id} value={t.id}>
-                  {t.name} — ${t.discountPrice || t.price} ({t.category})
+                  {t.name} — ₹{t.discountPrice || t.price} ({t.category})
                 </option>
               ))}
             </select>
