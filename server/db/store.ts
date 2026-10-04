@@ -64,7 +64,14 @@ class DatabaseStore {
       if (fs.existsSync(DB_FILE)) {
         const fileContent = fs.readFileSync(DB_FILE, 'utf-8');
         const parsed = JSON.parse(fileContent);
-        if (parsed.users && parsed.users.length > 0) {
+        if (
+          parsed.users &&
+          parsed.users.length > 0 &&
+          parsed.doctorProfiles &&
+          parsed.doctorProfiles.length >= 20 &&
+          parsed.diagnosticTests &&
+          parsed.diagnosticTests.length >= 30
+        ) {
           return parsed;
         }
       }

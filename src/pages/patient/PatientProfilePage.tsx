@@ -1,16 +1,17 @@
 import React, { useState } from 'react';
 import { User as UserIcon, Heart, AlertCircle, ShieldCheck, Save, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.js';
+import { handleImageError } from '../../utils/imageUtils.js';
 
 export const PatientProfilePage: React.FC = () => {
   const { user, profile } = useAuth();
 
-  const [dob, setDob] = useState(profile?.dob || '1988-06-14');
+  const [dob, setDob] = useState(profile?.dob || '1990-08-15');
   const [gender, setGender] = useState(profile?.gender || 'Male');
-  const [bloodGroup, setBloodGroup] = useState(profile?.bloodGroup || 'O+');
-  const [allergies, setAllergies] = useState(profile?.allergies || 'Penicillin, Shellfish');
-  const [emergencyContact, setEmergencyContact] = useState(profile?.emergencyContact || 'Emily Miller (+1 555-349-1105)');
-  const [address, setAddress] = useState(profile?.address || '742 Evergreen Terrace, Springfield, OR');
+  const [bloodGroup, setBloodGroup] = useState(profile?.bloodGroup || 'B+');
+  const [allergies, setAllergies] = useState(profile?.allergies || 'Penicillin (mild)');
+  const [emergencyContact, setEmergencyContact] = useState(profile?.emergencyContact || 'Amit Sharma (+91 98390 12345)');
+  const [address, setAddress] = useState(profile?.address || 'B-4/112, Sector 4, Gomti Nagar, Lucknow');
   const [savedNotice, setSavedNotice] = useState(false);
 
   const handleSave = (e: React.FormEvent) => {
@@ -40,11 +41,12 @@ export const PatientProfilePage: React.FC = () => {
           <img
             src={user?.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user?.name || 'User')}`}
             alt="Profile avatar"
+            onError={(e) => handleImageError(e, user?.name)}
             className="w-16 h-16 rounded-2xl border border-slate-200 object-cover"
           />
           <div>
             <h3 className="text-base font-bold text-slate-900">{user?.name}</h3>
-            <p className="text-xs text-slate-500">{user?.email} • {user?.phone || '+1 (555) 349-1102'}</p>
+            <p className="text-xs text-slate-500">{user?.email} • {user?.phone || '+91 98765 43210'}</p>
             <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200">
               Verified Patient ID: {user?.id}
             </span>

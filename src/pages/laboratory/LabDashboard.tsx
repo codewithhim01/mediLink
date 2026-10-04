@@ -51,7 +51,7 @@ export const LabDashboard: React.FC<LabDashboardProps> = ({ navigate }) => {
             {profile?.name || 'Precision Diagnostics & Pathology'}
           </h1>
           <p className="text-xs sm:text-sm text-teal-100 max-w-xl">
-            License: <strong>{profile?.licenseNo || 'CLIA-OR-9912401'}</strong> • Accreditation: {profile?.accreditation || 'CAP & CLIA Accredited'}
+            License: <strong>{profile?.licenseNo || 'NABL-UP-9912401'}</strong> • Accreditation: {profile?.accreditation || 'NABL & ICMR Accredited'}
           </p>
         </div>
 
@@ -100,7 +100,7 @@ export const LabDashboard: React.FC<LabDashboardProps> = ({ navigate }) => {
             <ShieldCheck size={20} />
           </div>
           <p className="text-2xl font-black text-blue-700">100%</p>
-          <p className="text-xs font-semibold text-slate-500 mt-0.5">CLIA Quality Compliant</p>
+          <p className="text-xs font-semibold text-slate-500 mt-0.5">NABL Quality Compliant</p>
         </div>
       </div>
 

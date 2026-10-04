@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Stethoscope, DollarSign, Clock, Save, CheckCircle2, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.js';
 import { api } from '../../services/api.js';
+import { handleImageError } from '../../utils/imageUtils.js';
 
 export const DoctorProfilePage: React.FC = () => {
   const { user, profile, refreshProfile } = useAuth();
@@ -9,8 +10,8 @@ export const DoctorProfilePage: React.FC = () => {
   const [specialty, setSpecialty] = useState(profile?.specialty || 'Cardiology');
   const [subSpecialty, setSubSpecialty] = useState(profile?.subSpecialty || 'Interventional & Preventive Cardiology');
   const [experienceYears, setExperienceYears] = useState(profile?.experienceYears || 14);
-  const [qualification, setQualification] = useState(profile?.qualification || 'MBBS, MD (Cardiology), FACC');
-  const [consultationFee, setConsultationFee] = useState(profile?.consultationFee || 120);
+  const [qualification, setQualification] = useState(profile?.qualification || 'MBBS, MD (Medicine), DM (Cardiology)');
+  const [consultationFee, setConsultationFee] = useState(profile?.consultationFee || 800);
   const [consultationDuration, setConsultationDuration] = useState(profile?.consultationDuration || 20);
   const [bio, setBio] = useState(profile?.bio || '');
   const [availability, setAvailability] = useState<string[]>(['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday']);
@@ -101,6 +102,7 @@ export const DoctorProfilePage: React.FC = () => {
           <img
             src={user?.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user?.name || 'Doctor')}`}
             alt="Physician avatar"
+            onError={(e) => handleImageError(e, user?.name)}
             className="w-16 h-16 rounded-2xl border border-slate-200 object-cover"
           />
           <div>

@@ -195,18 +195,18 @@ export const BookTestModal: React.FC<BookTestModalProps> = ({
         </div>
 
         {/* Actions */}
-        <div className="flex justify-end gap-2 pt-3 border-t border-slate-100">
+        <div className="flex flex-col-reverse sm:flex-row justify-end gap-2 pt-3 border-t border-slate-100">
           <button
             type="button"
             onClick={onClose}
-            className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
+            className="w-full sm:w-auto px-4 py-2.5 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer text-center"
           >
             Cancel
           </button>
           <button
             type="submit"
             disabled={loading}
-            className="px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shadow-teal-500/20 disabled:opacity-50 flex items-center gap-2 cursor-pointer"
+            className="w-full sm:w-auto px-5 py-2.5 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition-all shadow-sm shadow-teal-500/20 disabled:opacity-50 flex items-center justify-center gap-2 cursor-pointer"
           >
             {loading && <Loader2 size={14} className="animate-spin" />}
             <span>Confirm Diagnostic Booking</span>

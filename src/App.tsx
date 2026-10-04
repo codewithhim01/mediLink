@@ -168,16 +168,16 @@ const AppContent: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-900 selection:bg-teal-100 selection:text-teal-900">
+    <div className="min-h-screen flex flex-col bg-slate-50 font-sans text-slate-900 selection:bg-teal-100 selection:text-teal-900 w-full max-w-full overflow-x-hidden">
       <Navbar currentPath={currentPath} navigate={navigate} />
 
       {isDashboardRoute && isAuthenticated && user ? (
-        <div className="flex-1 flex flex-col md:flex-row overflow-hidden">
+        <div className="flex-1 flex flex-col md:flex-row overflow-hidden w-full max-w-full">
           <Sidebar currentPath={currentPath} navigate={navigate} />
-          <main className="flex-1 overflow-y-auto w-full min-w-0">{renderCurrentView()}</main>
+          <main className="flex-1 overflow-y-auto w-full min-w-0 max-w-full">{renderCurrentView()}</main>
         </div>
       ) : (
-        <main className="flex-1 w-full min-w-0">{renderCurrentView()}</main>
+        <main className="flex-1 w-full min-w-0 max-w-full">{renderCurrentView()}</main>
       )}
     </div>
   );

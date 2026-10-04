@@ -296,12 +296,12 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ navigate }) => {
                 />
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-0.5">CLIA License #</label>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-0.5">NABL / ICMR Reg. #</label>
                 <input
                   type="text"
                   value={licenseNo}
                   onChange={(e) => setLicenseNo(e.target.value)}
-                  placeholder="CLIA-OR-77889"
+                  placeholder="NABL-UP-77889"
                   className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
                 />
               </div>

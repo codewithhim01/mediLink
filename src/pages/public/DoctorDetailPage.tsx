@@ -21,6 +21,7 @@ import { RatingStars } from '../../components/common/RatingStars.js';
 import { Badge } from '../../components/common/Badge.js';
 import { BookAppointmentModal } from '../../components/patient/BookAppointmentModal.js';
 import { useAuth } from '../../contexts/AuthContext.js';
+import { handleImageError } from '../../utils/imageUtils.js';
 
 interface DoctorDetailPageProps {
   doctorId: string;
@@ -139,19 +140,20 @@ export const DoctorDetailPage: React.FC<DoctorDetailPageProps> = ({ doctorId, na
 
       {/* Main Doctor Profile Card */}
       <div className="bg-white rounded-3xl border border-slate-200/80 p-6 sm:p-8 shadow-xs space-y-6">
-        <div className="flex flex-col sm:flex-row items-start justify-between gap-6 pb-6 border-b border-slate-100">
-          <div className="flex items-start gap-4">
+        <div className="flex flex-col md:flex-row items-center sm:items-start justify-between gap-6 pb-6 border-b border-slate-100">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 text-center sm:text-left">
             <img
               src={doctor.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(doctor.name)}`}
               alt={doctor.name}
-              className="w-20 h-20 rounded-2xl object-cover border-2 border-blue-100 shadow-sm"
+              onError={(e) => handleImageError(e, doctor.name)}
+              className="w-20 h-20 rounded-2xl object-cover border-2 border-blue-100 shadow-sm shrink-0"
             />
             <div>
-              <div className="flex items-center gap-2">
+              <div className="flex flex-wrap items-center justify-center sm:justify-start gap-2">
                 <h1 className="text-xl sm:text-2xl font-black text-slate-900">{doctor.name}</h1>
                 {doctor.isVerified && (
                   <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-blue-50 text-blue-700 border border-blue-200">
-                    <ShieldCheck size={12} /> Verified License
+                    <ShieldCheck size={12} /> Verified NMC License
                   </span>
                 )}
               </div>
@@ -163,14 +165,14 @@ export const DoctorDetailPage: React.FC<DoctorDetailPageProps> = ({ doctorId, na
                 {doctor.qualification} • {doctor.experienceYears} Years Clinical Experience
               </p>
 
-              <div className="mt-2 flex items-center gap-2">
+              <div className="mt-2 flex items-center justify-center sm:justify-start gap-2">
                 <RatingStars rating={doctor.rating} showScore reviewCount={doctor.reviewCount} />
               </div>
             </div>
           </div>
 
-          <div className="flex sm:flex-col items-center sm:items-end justify-between w-full sm:w-auto pt-4 sm:pt-0 border-t sm:border-t-0 border-slate-100">
-            <div className="text-left sm:text-right">
+          <div className="flex flex-col sm:flex-row md:flex-col items-center sm:items-center md:items-end justify-between w-full md:w-auto pt-4 md:pt-0 border-t md:border-t-0 border-slate-100 gap-3">
+            <div className="text-center sm:text-left md:text-right">
               <span className="text-xs font-semibold text-slate-500">Consultation Fee</span>
               <p className="text-3xl font-black text-slate-900">₹{doctor.consultationFee}</p>
               <span className="text-[11px] text-slate-400">{doctor.consultationDuration} min consultation</span>
@@ -178,7 +180,7 @@ export const DoctorDetailPage: React.FC<DoctorDetailPageProps> = ({ doctorId, na
 
             <button
               onClick={handleBook}
-              className="mt-4 px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-500/20 flex items-center gap-2 cursor-pointer"
+              className="w-full sm:w-auto px-6 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-all shadow-md shadow-blue-500/20 flex items-center justify-center gap-2 cursor-pointer shrink-0"
             >
               <Calendar size={15} />
               <span>Book Appointment</span>

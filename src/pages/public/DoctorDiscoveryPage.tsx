@@ -8,6 +8,7 @@ import { BookAppointmentModal } from '../../components/patient/BookAppointmentMo
 import { useAuth } from '../../contexts/AuthContext.js';
 import { useLocation } from '../../contexts/LocationContext.js';
 import { LocationPickerModal } from '../../components/common/LocationPickerModal.js';
+import { handleImageError } from '../../utils/imageUtils.js';
 
 interface DoctorDiscoveryPageProps {
   navigate: (path: string) => void;
@@ -209,16 +210,12 @@ export const DoctorDiscoveryPage: React.FC<DoctorDiscoveryPageProps> = ({
           </button>
         </form>
 
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100">
-          <span className="text-xs font-bold text-slate-500 flex items-center gap-1 mr-1">
-            <Filter size={13} /> Filters:
-          </span>
-
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:flex lg:items-center gap-2 pt-2 border-t border-slate-100">
           {/* Specialty Dropdown */}
           <select
             value={specialty}
             onChange={(e) => setSpecialty(e.target.value === 'All Specialties' ? '' : e.target.value)}
-            className="p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:bg-white"
+            className="w-full lg:w-auto p-2 sm:p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:bg-white"
           >
             {specialtiesList.map((spec) => (
               <option key={spec} value={spec === 'All Specialties' ? '' : spec}>
@@ -231,7 +228,7 @@ export const DoctorDiscoveryPage: React.FC<DoctorDiscoveryPageProps> = ({
           <select
             value={maxFee}
             onChange={(e) => setMaxFee(e.target.value ? Number(e.target.value) : '')}
-            className="p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:bg-white"
+            className="w-full lg:w-auto p-2 sm:p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:bg-white"
           >
             <option value="">Max Fee: Any</option>
             <option value="600">Up to ₹600</option>
@@ -244,7 +241,7 @@ export const DoctorDiscoveryPage: React.FC<DoctorDiscoveryPageProps> = ({
           <select
             value={minRating}
             onChange={(e) => setMinRating(e.target.value ? Number(e.target.value) : '')}
-            className="p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:bg-white"
+            className="w-full lg:w-auto p-2 sm:p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:bg-white"
           >
             <option value="">Rating: Any</option>
             <option value="4.5">4.5+ Stars</option>
@@ -252,12 +249,12 @@ export const DoctorDiscoveryPage: React.FC<DoctorDiscoveryPageProps> = ({
           </select>
 
           {/* Sort By */}
-          <div className="flex items-center gap-1 ml-auto">
-            <ArrowUpDown size={13} className="text-slate-400" />
+          <div className="flex items-center gap-1 w-full lg:w-auto lg:ml-auto col-span-2 sm:col-span-1">
+            <ArrowUpDown size={13} className="text-slate-400 shrink-0" />
             <select
               value={sortBy}
               onChange={(e) => setSortBy(e.target.value as any)}
-              className="p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-blue-900 focus:bg-white"
+              className="w-full lg:w-auto p-2 sm:p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-blue-900 focus:bg-white"
             >
               <option value="nearest">Sort: Nearest to Me (km)</option>
               <option value="rating">Sort: Highest Rated</option>
@@ -269,9 +266,9 @@ export const DoctorDiscoveryPage: React.FC<DoctorDiscoveryPageProps> = ({
           {(specialty || maxFee || minRating || search) && (
             <button
               onClick={() => { setSpecialty(''); setMaxFee(''); setMinRating(''); setSearch(''); }}
-              className="text-xs text-rose-600 hover:underline font-semibold ml-2 cursor-pointer"
+              className="text-xs text-rose-600 hover:underline font-semibold cursor-pointer col-span-2 sm:col-span-1 text-center lg:text-left py-1"
             >
-              Reset
+              Reset Filters
             </button>
           )}
         </div>
@@ -325,6 +322,7 @@ export const DoctorDiscoveryPage: React.FC<DoctorDiscoveryPageProps> = ({
                     <img
                       src={doc.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(doc.name)}`}
                       alt={doc.name}
+                      onError={(e) => handleImageError(e, doc.name)}
                       className="w-12 h-12 rounded-xl object-cover border border-slate-100 shrink-0 group-hover:ring-2 group-hover:ring-blue-500 transition-all"
                     />
                     <div>

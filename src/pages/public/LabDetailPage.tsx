@@ -95,13 +95,13 @@ export const LabDetailPage: React.FC<LabDetailPageProps> = ({ labId, navigate })
               <h1 className="text-2xl font-black text-slate-900">{lab.name}</h1>
               {lab.isVerified && (
                 <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-teal-50 text-teal-800 border border-teal-200">
-                  <ShieldCheck size={12} /> CLIA / CAP Accredited
+                  <ShieldCheck size={12} /> NABL & ICMR Accredited
                 </span>
               )}
             </div>
 
             <p className="text-xs font-semibold text-teal-700 mt-1">
-              CLIA License #{lab.licenseNo} • {lab.accreditation || 'College of American Pathologists (CAP) Certified'}
+              Lab Registration #{lab.licenseNo} • {lab.accreditation || 'NABL & ICMR Certified Pathology Laboratory'}
             </p>
 
             <div className="mt-2">
@@ -109,7 +109,7 @@ export const LabDetailPage: React.FC<LabDetailPageProps> = ({ labId, navigate })
             </div>
           </div>
 
-          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-700 space-y-1.5 min-w-[240px]">
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-700 space-y-1.5 w-full sm:w-auto sm:min-w-[240px]">
             <div className="flex items-center gap-2">
               <MapPin size={14} className="text-teal-600 shrink-0" />
               <span>{lab.address}, {lab.city}</span>

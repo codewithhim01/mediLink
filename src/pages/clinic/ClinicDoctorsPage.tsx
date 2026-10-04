@@ -3,6 +3,7 @@ import { Stethoscope, MapPin, Star, Clock, Plus, ShieldCheck } from 'lucide-reac
 import { api } from '../../services/api.js';
 import { Doctor } from '../../types/index.js';
 import { RatingStars } from '../../components/common/RatingStars.js';
+import { handleImageError } from '../../utils/imageUtils.js';
 
 export const ClinicDoctorsPage: React.FC = () => {
   const [doctors, setDoctors] = useState<Doctor[]>([]);
@@ -32,6 +33,7 @@ export const ClinicDoctorsPage: React.FC = () => {
                 <img
                   src={doc.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(doc.name)}`}
                   alt={doc.name}
+                  onError={(e) => handleImageError(e, doc.name)}
                   className="w-12 h-12 rounded-xl object-cover border border-slate-100"
                 />
                 <div>

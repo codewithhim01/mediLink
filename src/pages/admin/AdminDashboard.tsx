@@ -183,7 +183,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ navigate }) => {
           </div>
           <h4 className="text-sm font-bold text-slate-900">Credential Verification</h4>
           <p className="text-xs text-slate-500">
-            Review state medical licenses, CLIA numbers, and clinic registration certificates.
+            Review NMC registrations, NABL certificates, and UP clinic permits.
           </p>
         </div>
 

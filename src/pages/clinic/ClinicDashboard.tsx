@@ -4,6 +4,7 @@ import { useAuth } from '../../contexts/AuthContext.js';
 import { api } from '../../services/api.js';
 import { Doctor, Appointment } from '../../types/index.js';
 import { Badge } from '../../components/common/Badge.js';
+import { handleImageError } from '../../utils/imageUtils.js';
 
 interface ClinicDashboardProps {
   navigate: (path: string) => void;
@@ -109,6 +110,7 @@ export const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ navigate }) =>
                 <img
                   src={doc.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(doc.name)}`}
                   alt={doc.name}
+                  onError={(e) => handleImageError(e, doc.name)}
                   className="w-10 h-10 rounded-xl object-cover border border-slate-200"
                 />
                 <div>

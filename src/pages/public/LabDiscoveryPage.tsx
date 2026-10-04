@@ -78,7 +78,7 @@ export const LabDiscoveryPage: React.FC<LabDiscoveryPageProps> = ({ navigate }) 
       </div>
 
       {/* Search Bar */}
-      <form onSubmit={handleSearchSubmit} className="p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs flex gap-3">
+      <form onSubmit={handleSearchSubmit} className="p-3 sm:p-4 bg-white rounded-2xl border border-slate-200/80 shadow-xs flex flex-col sm:flex-row gap-2.5 sm:gap-3">
         <div className="relative flex-1">
           <Search size={16} className="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400" />
           <input
@@ -91,7 +91,7 @@ export const LabDiscoveryPage: React.FC<LabDiscoveryPageProps> = ({ navigate }) 
         </div>
         <button
           type="submit"
-          className="px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer"
+          className="w-full sm:w-auto px-5 py-2 bg-teal-600 hover:bg-teal-700 text-white rounded-xl text-xs font-bold transition-colors cursor-pointer shrink-0"
         >
           Search
         </button>

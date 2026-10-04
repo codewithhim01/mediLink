@@ -24,6 +24,7 @@ import { useNotifications } from '../../contexts/NotificationContext.js';
 import { useLocation, PRESET_LOCAL_AREAS, LocalArea } from '../../contexts/LocationContext.js';
 import { LocationPickerModal } from './LocationPickerModal.js';
 import { Role } from '../../types/index.js';
+import { handleImageError } from '../../utils/imageUtils.js';
 
 interface NavbarProps {
   currentPath: string;
@@ -87,32 +88,32 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
 
   return (
     <header className="sticky top-0 z-40 w-full bg-slate-900/98 backdrop-blur-md border-b border-slate-800 shadow-md">
-      <div className="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
-        <div className="flex items-center justify-between h-16 gap-2">
+      <div className="max-w-7xl mx-auto px-2.5 sm:px-4 lg:px-6">
+        <div className="flex items-center justify-between h-15 sm:h-16 gap-1.5 sm:gap-3">
           {/* Logo & Brand */}
-          <div className="flex items-center gap-4 lg:gap-7 shrink-0">
+          <div className="flex items-center gap-2 sm:gap-5 shrink-0 min-w-0">
             <button
               onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
-              className="flex items-center gap-2 cursor-pointer group text-left"
+              className="flex items-center gap-1.5 sm:gap-2 cursor-pointer group text-left shrink-0"
             >
-              <div className="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-tr from-blue-500 to-teal-400 flex items-center justify-center text-slate-950 shadow-md shadow-teal-500/20 group-hover:scale-105 transition-transform shrink-0">
-                <Activity size={20} className="stroke-[2.5]" />
+              <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-blue-500 to-teal-400 flex items-center justify-center text-slate-950 shadow-md shadow-teal-500/20 group-hover:scale-105 transition-transform shrink-0">
+                <Activity size={18} className="stroke-[2.5]" />
               </div>
-              <div>
-                <span className="text-lg sm:text-xl font-bold bg-gradient-to-r from-white via-slate-100 to-teal-300 bg-clip-text text-transparent">
+              <div className="min-w-0">
+                <span className="text-sm sm:text-lg xl:text-xl font-black bg-gradient-to-r from-white via-slate-100 to-teal-300 bg-clip-text text-transparent">
                   MediLink
                 </span>
-                <span className="block text-[9px] sm:text-[10px] uppercase tracking-wider font-semibold text-teal-400 -mt-1">
+                <span className="hidden 2xl:block text-[9px] uppercase tracking-wider font-semibold text-teal-400 -mt-1 truncate">
                   Lucknow Health Hub
                 </span>
               </div>
             </button>
 
-            {/* Public Navigation - Desktop */}
-            <nav className="hidden md:flex items-center gap-1">
+            {/* Public Navigation - Desktop (xl+) */}
+            <nav className="hidden xl:flex items-center gap-1 xl:gap-2">
               <button
                 onClick={() => navigate('/doctors')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
+                className={`px-2.5 xl:px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
                   currentPath.startsWith('/doctors')
                     ? 'text-teal-300 bg-slate-800 font-semibold border border-slate-700/60'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
@@ -122,7 +123,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
               </button>
               <button
                 onClick={() => navigate('/diagnostic-tests')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
+                className={`px-2.5 xl:px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
                   currentPath.startsWith('/diagnostic-tests')
                     ? 'text-teal-300 bg-slate-800 font-semibold border border-slate-700/60'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
@@ -132,7 +133,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
               </button>
               <button
                 onClick={() => navigate('/laboratories')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
+                className={`px-2.5 xl:px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
                   currentPath.startsWith('/laboratories')
                     ? 'text-teal-300 bg-slate-800 font-semibold border border-slate-700/60'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
@@ -142,7 +143,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
               </button>
               <button
                 onClick={() => navigate('/clinics')}
-                className={`px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer ${
+                className={`px-2.5 xl:px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
                   currentPath.startsWith('/clinics')
                     ? 'text-teal-300 bg-slate-800 font-semibold border border-slate-700/60'
                     : 'text-slate-300 hover:text-white hover:bg-slate-800/60'
@@ -154,12 +155,12 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
           </div>
 
           {/* Right Section: Combined Live GPS & Location Selector + Notification + Profile / Menu */}
-          <div className="flex items-center gap-1.5 sm:gap-2.5">
+          <div className="flex items-center gap-1 sm:gap-2 shrink-0 min-w-0">
             {/* COMBINED Live GPS & Location Selection Pill */}
-            <div className="relative">
+            <div className="relative shrink-0">
               <button
                 onClick={() => setShowLocationDropdown(!showLocationDropdown)}
-                className={`inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 text-xs font-semibold rounded-full border transition-all cursor-pointer shadow-xs ${
+                className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 text-xs font-semibold rounded-full border transition-all cursor-pointer shadow-xs ${
                   currentLocation.isLiveGps
                     ? 'bg-gradient-to-r from-emerald-950/80 via-slate-900 to-teal-950/80 text-emerald-300 border-emerald-500/60 ring-1 ring-emerald-400/30'
                     : 'bg-slate-800 hover:bg-slate-750 text-slate-100 border-slate-700 hover:border-teal-500/50'
@@ -170,31 +171,31 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
                 <div className="relative flex items-center justify-center shrink-0">
                   {currentLocation.isLiveGps ? (
                     <>
-                      <Navigation size={13} className={`text-emerald-400 ${isLocating ? 'animate-spin' : ''}`} />
+                      <Navigation size={12} className={`text-emerald-400 ${isLocating ? 'animate-spin' : ''}`} />
                       <span className="absolute -top-0.5 -right-0.5 flex h-2 w-2">
                         <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                         <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-300"></span>
                       </span>
                     </>
                   ) : (
-                    <MapPin size={13} className="text-teal-400 shrink-0" />
+                    <MapPin size={12} className="text-teal-400 shrink-0" />
                   )}
                 </div>
 
-                <span className="max-w-[70px] xs:max-w-[95px] sm:max-w-[130px] md:max-w-[150px] truncate text-[11px] sm:text-xs">
+                <span className="max-w-[55px] xs:max-w-[75px] sm:max-w-[100px] md:max-w-[130px] xl:max-w-[160px] truncate text-[11px] sm:text-xs font-semibold">
                   {currentLocation.areaName}
                 </span>
 
-                <span className="text-[10px] text-teal-300 font-bold bg-teal-950/90 border border-teal-800/70 px-1.5 py-0.2 rounded-full shrink-0">
+                <span className="hidden md:inline-block text-[10px] text-teal-300 font-bold bg-teal-950/90 border border-teal-800/70 px-1.5 py-0.2 rounded-full shrink-0">
                   {selectedRadius ? `${selectedRadius} km` : 'All'}
                 </span>
 
-                <ChevronDown size={12} className="text-slate-400 shrink-0" />
+                <ChevronDown size={11} className="text-slate-400 shrink-0" />
               </button>
 
               {/* Combined Fast Location & GPS Popover Dropdown */}
               {showLocationDropdown && (
-                <div className="absolute right-0 mt-2 w-72 sm:w-84 bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-3 z-50 text-slate-100 divide-y divide-slate-800 animate-in fade-in">
+                <div className="absolute right-0 mt-2 w-[min(calc(100vw-1.5rem),340px)] bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-3 z-50 text-slate-100 divide-y divide-slate-800 animate-in fade-in">
                   {/* Current Active Location Card with Status */}
                   <div className="pb-3 flex items-center justify-between gap-2">
                     <div>
@@ -327,7 +328,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
                 </button>
 
                 {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-72 sm:w-88 bg-slate-900 rounded-2xl shadow-2xl border border-slate-700/80 py-3 z-50 text-slate-100">
+                  <div className="absolute right-0 mt-2 w-[calc(100vw-1.5rem)] max-w-xs sm:w-88 bg-slate-900 rounded-2xl shadow-2xl border border-slate-700/80 py-3 z-50 text-slate-100">
                     <div className="flex items-center justify-between px-4 pb-2 border-b border-slate-800">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-white">Notifications</span>
@@ -385,23 +386,24 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
 
             {/* Authenticated User / Desktop Login Button */}
             {isAuthenticated && user ? (
-              <div className="relative">
+              <div className="relative shrink-0">
                 <button
                   onClick={() => setShowUserMenu(!showUserMenu)}
-                  className="flex items-center gap-1.5 sm:gap-2 p-1 sm:p-1.5 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer"
+                  className="flex items-center gap-1.5 p-1 sm:p-1.5 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
                 >
                   <img
                     src={user.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(user.name)}`}
                     alt={user.name}
+                    onError={(e) => handleImageError(e, user.name)}
                     className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-slate-700 object-cover shrink-0"
                   />
-                  <div className="hidden lg:block text-left text-xs">
+                  <div className="hidden 2xl:block text-left text-xs">
                     <p className="font-semibold text-slate-100 line-clamp-1">{user.name}</p>
                     <span className={`inline-block px-1.5 py-0.2 rounded text-[10px] font-semibold border ${roleColors[user.role]}`}>
                       {user.role}
                     </span>
                   </div>
-                  <ChevronDown size={14} className="text-slate-400 hidden sm:block" />
+                  <ChevronDown size={13} className="text-slate-400 hidden sm:block shrink-0" />
                 </button>
 
                 {showUserMenu && (
@@ -439,26 +441,26 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
                 )}
               </div>
             ) : (
-              <div className="hidden sm:flex items-center gap-1.5">
+              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
                 <button
                   onClick={() => navigate('/login')}
-                  className="px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+                  className="hidden md:inline-flex px-2 sm:px-2.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors cursor-pointer shrink-0"
                 >
                   Sign In
                 </button>
                 <button
                   onClick={() => navigate('/register')}
-                  className="px-3.5 py-1.5 text-xs font-bold text-slate-950 bg-teal-400 hover:bg-teal-300 rounded-xl transition-colors shadow-sm shadow-teal-500/20 cursor-pointer"
+                  className="px-2.5 sm:px-3 py-1.5 text-xs font-bold text-slate-950 bg-teal-400 hover:bg-teal-300 rounded-xl transition-colors shadow-sm shadow-teal-500/20 cursor-pointer shrink-0 whitespace-nowrap"
                 >
                   Join
                 </button>
               </div>
             )}
 
-            {/* Mobile Hamburger Toggle */}
+            {/* Mobile / Tablet Hamburger Toggle (xl:hidden) */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="md:hidden p-1.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors cursor-pointer"
+              className="xl:hidden p-1.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors cursor-pointer shrink-0"
               aria-label="Toggle Navigation Menu"
             >
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -467,9 +469,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
         </div>
       </div>
 
-      {/* Mobile Navigation Drawer / Dropdown */}
+      {/* Mobile & Tablet Navigation Drawer (xl:hidden) */}
       {mobileMenuOpen && (
-        <div className="md:hidden bg-slate-900 border-t border-slate-800 px-4 pt-3 pb-5 space-y-3 animate-in fade-in duration-150">
+        <div className="xl:hidden bg-slate-900 border-t border-slate-800 px-4 pt-3 pb-5 space-y-3 animate-in fade-in duration-150">
           <nav className="grid grid-cols-2 gap-2 text-xs">
             <button
               onClick={() => { navigate('/doctors'); setMobileMenuOpen(false); }}

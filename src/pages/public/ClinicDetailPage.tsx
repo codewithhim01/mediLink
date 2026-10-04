@@ -108,7 +108,7 @@ export const ClinicDetailPage: React.FC<ClinicDetailPageProps> = ({ clinicId, na
             </div>
           </div>
 
-          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-700 space-y-1.5 min-w-[240px]">
+          <div className="p-4 bg-slate-50 rounded-2xl border border-slate-100 text-xs text-slate-700 space-y-1.5 w-full sm:w-auto sm:min-w-[240px]">
             <div className="flex items-center gap-2">
               <MapPin size={14} className="text-blue-600 shrink-0" />
               <span>{clinic.address}, {clinic.city}</span>

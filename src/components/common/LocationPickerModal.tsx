@@ -195,23 +195,23 @@ export const LocationPickerModal: React.FC<LocationPickerModalProps> = ({ isOpen
         </div>
 
         {/* Footer */}
-        <div className="pt-3 border-t border-slate-100 flex items-center justify-between">
-          <p className="text-[11px] text-slate-400">
+        <div className="pt-3 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+          <p className="text-[11px] text-slate-400 text-center sm:text-left">
             Coordinates: {currentLocation.lat.toFixed(4)}°N, {currentLocation.lng.toFixed(4)}°E (Lucknow, UP)
           </p>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-end gap-2 w-full sm:w-auto">
             <button
               type="button"
               onClick={onClose}
-              className="px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer"
+              className="flex-1 sm:flex-initial px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-100 rounded-xl cursor-pointer text-center"
             >
               Cancel
             </button>
             <button
               type="button"
               onClick={handleApply}
-              className="px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm shadow-blue-500/20 cursor-pointer"
+              className="flex-1 sm:flex-initial px-5 py-2 bg-blue-600 hover:bg-blue-700 text-white rounded-xl text-xs font-bold transition-colors shadow-sm shadow-blue-500/20 cursor-pointer text-center"
             >
               Apply Locality
             </button>

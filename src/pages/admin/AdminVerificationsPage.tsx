@@ -38,7 +38,7 @@ export const AdminVerificationsPage: React.FC = () => {
       <div>
         <h1 className="text-2xl font-black text-slate-900">Provider Credential Verification</h1>
         <p className="text-xs sm:text-sm text-slate-500 mt-0.5">
-          Verify medical licenses, CLIA numbers, and state healthcare center registration permits.
+          Verify NMC medical registrations, NABL laboratory certificates, and UP clinic permits.
         </p>
       </div>
 

@@ -197,15 +197,11 @@ export const TestComparisonPage: React.FC<TestComparisonPageProps> = ({
         </form>
 
         {/* Filter & Sorting Controls */}
-        <div className="flex flex-wrap items-center gap-2 pt-2 border-t border-slate-100 text-xs">
-          <span className="font-bold text-slate-400 flex items-center gap-1">
-            <Filter size={13} /> Filters:
-          </span>
-
+        <div className="grid grid-cols-1 sm:grid-cols-3 lg:flex lg:items-center gap-2 pt-2 border-t border-slate-100 text-xs">
           <select
             value={category}
             onChange={(e) => setCategory(e.target.value === 'All Categories' ? '' : e.target.value)}
-            className="p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:bg-white"
+            className="w-full lg:w-auto p-2 sm:p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:bg-white"
           >
             {categories.map((c) => (
               <option key={c} value={c}>{c}</option>
@@ -215,7 +211,7 @@ export const TestComparisonPage: React.FC<TestComparisonPageProps> = ({
           <select
             value={maxTAT}
             onChange={(e) => setMaxTAT(e.target.value ? Number(e.target.value) : '')}
-            className="p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:bg-white"
+            className="w-full lg:w-auto p-2 sm:p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-medium text-slate-700 focus:bg-white"
           >
             <option value="">Max Turnaround: Any</option>
             <option value="8">Under 8 Hours</option>
@@ -223,13 +219,12 @@ export const TestComparisonPage: React.FC<TestComparisonPageProps> = ({
             <option value="24">Under 24 Hours</option>
           </select>
 
-          <div className="flex items-center gap-1 ml-auto">
-            <ArrowUpDown size={13} className="text-slate-400" />
-            <span className="font-semibold text-slate-400">Sort by:</span>
+          <div className="flex items-center gap-1.5 w-full lg:w-auto lg:ml-auto">
+            <ArrowUpDown size={13} className="text-slate-400 shrink-0" />
             <select
               value={sort}
               onChange={(e) => setSort(e.target.value)}
-              className="p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-teal-900 focus:bg-white"
+              className="w-full lg:w-auto p-2 sm:p-1.5 bg-slate-50 border border-slate-200 rounded-lg text-xs font-bold text-teal-900 focus:bg-white"
             >
               <option value="nearest">Nearest Lab to Me (km)</option>
               <option value="price_asc">Price: Low to High (₹)</option>
