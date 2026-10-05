@@ -96,9 +96,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const switchDemoRole = async (role: Role) => {
     const credentials: Record<Role, { email: string; pass: string }> = {
       PATIENT: { email: 'patient@medilink.com', pass: 'Patient@123' },
-      DOCTOR: { email: 'doctor.sarah@medilink.com', pass: 'Doctor@123' },
-      CLINIC: { email: 'admin@metroclinic.com', pass: 'Clinic@123' },
-      LABORATORY: { email: 'manager@precisionlab.com', pass: 'Lab@123' },
+      DOCTOR: { email: 'doctor@medilink.com', pass: 'Doctor@123' },
+      CLINIC: { email: 'clinic@medilink.com', pass: 'Clinic@123' },
+      LABORATORY: { email: 'lab@medilink.com', pass: 'Lab@123' },
       ADMIN: { email: 'admin@medilink.com', pass: 'Admin@123' },
     };
 

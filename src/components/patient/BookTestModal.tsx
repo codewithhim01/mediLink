@@ -3,6 +3,8 @@ import { Modal } from '../common/Modal.js';
 import { TestTube2, Home, Building2, Calendar, Clock, AlertCircle, Loader2 } from 'lucide-react';
 import { api } from '../../services/api.js';
 import { DiagnosticTest } from '../../types/index.js';
+import { validateDateNotPast, validateMinLength, validateRequired } from '../../utils/validation.js';
+import { FieldError } from '../common/FieldError.js';
 
 interface BookTestModalProps {
   test: DiagnosticTest | null;
@@ -24,9 +26,11 @@ export const BookTestModal: React.FC<BookTestModalProps> = ({
   const [collectionType, setCollectionType] = useState<'WALK_IN' | 'HOME_COLLECTION'>('WALK_IN');
   const [scheduledDate, setScheduledDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [scheduledTimeSlot, setScheduledTimeSlot] = useState<string>('08:30 AM');
-  const [collectionAddress, setCollectionAddress] = useState<string>('742 Evergreen Terrace, Springfield, OR');
+  const [collectionAddress, setCollectionAddress] = useState<string>('B-4/112, Sector 4, Gomti Nagar, Lucknow');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   const price = test.discountPrice !== undefined && test.discountPrice !== null ? test.discountPrice : test.price;
 
@@ -36,8 +40,33 @@ export const BookTestModal: React.FC<BookTestModalProps> = ({
     '02:00 PM', '03:00 PM', '04:00 PM'
   ];
 
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    const dateErr = validateDateNotPast(scheduledDate, 'Scheduled date');
+    if (dateErr) errors.scheduledDate = dateErr;
+
+    const slotErr = validateRequired(scheduledTimeSlot, 'Time slot');
+    if (slotErr) errors.scheduledTimeSlot = slotErr;
+
+    if (collectionType === 'HOME_COLLECTION') {
+      const addrErr = validateMinLength(collectionAddress, 8, 'Home phlebotomy address');
+      if (addrErr) errors.collectionAddress = addrErr;
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setTouched({ scheduledDate: true, scheduledTimeSlot: true, collectionAddress: true });
+
+    if (!validateForm()) {
+      setError('Please resolve the highlighted booking details.');
+      return;
+    }
+
     setLoading(true);
     setError(null);
 
@@ -48,7 +77,7 @@ export const BookTestModal: React.FC<BookTestModalProps> = ({
         collectionType,
         scheduledDate,
         scheduledTimeSlot,
-        collectionAddress: collectionType === 'HOME_COLLECTION' ? collectionAddress : test.laboratoryAddress,
+        collectionAddress: collectionType === 'HOME_COLLECTION' ? collectionAddress.trim() : test.laboratoryAddress,
       });
 
       if (res.success && res.data) {
@@ -147,30 +176,48 @@ export const BookTestModal: React.FC<BookTestModalProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              Scheduled Date:
+              Scheduled Date: <span className="text-rose-500">*</span>
             </label>
             <input
               type="date"
               value={scheduledDate}
               min={new Date().toISOString().split('T')[0]}
-              onChange={(e) => setScheduledDate(e.target.value)}
-              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white"
+              onBlur={() => setTouched(prev => ({ ...prev, scheduledDate: true }))}
+              onChange={(e) => {
+                setScheduledDate(e.target.value);
+                if (fieldErrors.scheduledDate) setFieldErrors(prev => ({ ...prev, scheduledDate: '' }));
+              }}
+              className={`w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-medium text-slate-800 focus:bg-white ${
+                touched.scheduledDate && fieldErrors.scheduledDate
+                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                  : 'border-slate-200 focus:ring-teal-500'
+              }`}
             />
+            {touched.scheduledDate && <FieldError error={fieldErrors.scheduledDate} />}
           </div>
 
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              Time Slot:
+              Time Slot: <span className="text-rose-500">*</span>
             </label>
             <select
               value={scheduledTimeSlot}
-              onChange={(e) => setScheduledTimeSlot(e.target.value)}
-              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white"
+              onBlur={() => setTouched(prev => ({ ...prev, scheduledTimeSlot: true }))}
+              onChange={(e) => {
+                setScheduledTimeSlot(e.target.value);
+                if (fieldErrors.scheduledTimeSlot) setFieldErrors(prev => ({ ...prev, scheduledTimeSlot: '' }));
+              }}
+              className={`w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-medium text-slate-800 focus:bg-white ${
+                touched.scheduledTimeSlot && fieldErrors.scheduledTimeSlot
+                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                  : 'border-slate-200 focus:ring-teal-500'
+              }`}
             >
               {timeSlots.map(slot => (
                 <option key={slot} value={slot}>{slot}</option>
               ))}
             </select>
+            {touched.scheduledTimeSlot && <FieldError error={fieldErrors.scheduledTimeSlot} />}
           </div>
         </div>
 
@@ -178,14 +225,24 @@ export const BookTestModal: React.FC<BookTestModalProps> = ({
         {collectionType === 'HOME_COLLECTION' && (
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              Sample Collection Home Address:
+              Sample Collection Home Address: <span className="text-rose-500">*</span>
             </label>
             <input
               type="text"
               value={collectionAddress}
-              onChange={(e) => setCollectionAddress(e.target.value)}
-              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white"
+              onBlur={() => setTouched(prev => ({ ...prev, collectionAddress: true }))}
+              onChange={(e) => {
+                setCollectionAddress(e.target.value);
+                if (fieldErrors.collectionAddress) setFieldErrors(prev => ({ ...prev, collectionAddress: '' }));
+              }}
+              placeholder="House/Flat No., Road/Sector, Locality, Lucknow"
+              className={`w-full p-2.5 bg-slate-50 border rounded-xl text-xs text-slate-800 focus:bg-white ${
+                touched.collectionAddress && fieldErrors.collectionAddress
+                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                  : 'border-slate-200 focus:ring-teal-500'
+              }`}
             />
+            {touched.collectionAddress && <FieldError error={fieldErrors.collectionAddress} />}
           </div>
         )}
 

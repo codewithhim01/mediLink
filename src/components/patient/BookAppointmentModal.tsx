@@ -3,6 +3,8 @@ import { Modal } from '../common/Modal.js';
 import { Stethoscope, Calendar, Clock, Video, UserCheck, AlertCircle, Loader2 } from 'lucide-react';
 import { api } from '../../services/api.js';
 import { Doctor } from '../../types/index.js';
+import { validateDateNotPast, validateMinLength, validateRequired } from '../../utils/validation.js';
+import { FieldError } from '../common/FieldError.js';
 
 interface BookAppointmentModalProps {
   isOpen: boolean;
@@ -25,6 +27,8 @@ export const BookAppointmentModal: React.FC<BookAppointmentModalProps> = ({
   const [symptoms, setSymptoms] = useState<string>('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
 
   useEffect(() => {
     if (isOpen) {
@@ -49,10 +53,31 @@ export const BookAppointmentModal: React.FC<BookAppointmentModalProps> = ({
     '03:00 PM', '03:30 PM', '04:00 PM', '04:30 PM'
   ];
 
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    const docErr = validateRequired(selectedDoctorId, 'Medical Specialist');
+    if (docErr) errors.doctorId = docErr;
+
+    const dateErr = validateDateNotPast(date, 'Consultation date');
+    if (dateErr) errors.date = dateErr;
+
+    const slotErr = validateRequired(timeSlot, 'Time slot');
+    if (slotErr) errors.timeSlot = slotErr;
+
+    const symptomsErr = validateMinLength(symptoms, 5, 'Reason for visit / symptoms');
+    if (symptomsErr) errors.symptoms = symptomsErr;
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!selectedDoctorId) {
-      setError('Please select a doctor.');
+    setTouched({ doctorId: true, date: true, timeSlot: true, symptoms: true });
+
+    if (!validateForm()) {
+      setError('Please resolve the required appointment fields.');
       return;
     }
 
@@ -65,7 +90,7 @@ export const BookAppointmentModal: React.FC<BookAppointmentModalProps> = ({
         date,
         timeSlot,
         type,
-        symptoms,
+        symptoms: symptoms.trim(),
       });
 
       if (res.success && res.data) {
@@ -100,19 +125,29 @@ export const BookAppointmentModal: React.FC<BookAppointmentModalProps> = ({
         {/* Doctor selection */}
         <div>
           <label className="block text-xs font-bold text-slate-700 mb-1.5">
-            Select Medical Specialist:
+            Select Medical Specialist: <span className="text-rose-500">*</span>
           </label>
           <select
             value={selectedDoctorId}
-            onChange={(e) => setSelectedDoctorId(e.target.value)}
-            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:ring-2 focus:ring-blue-500"
+            onBlur={() => setTouched(prev => ({ ...prev, doctorId: true }))}
+            onChange={(e) => {
+              setSelectedDoctorId(e.target.value);
+              if (fieldErrors.doctorId) setFieldErrors(prev => ({ ...prev, doctorId: '' }));
+            }}
+            className={`w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-semibold text-slate-800 focus:bg-white focus:ring-2 ${
+              touched.doctorId && fieldErrors.doctorId
+                ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                : 'border-slate-200 focus:ring-blue-500'
+            }`}
           >
+            <option value="">-- Choose a doctor --</option>
             {doctors.map(d => (
               <option key={d.id} value={d.id}>
                 {d.name} — {d.specialty} (₹{d.consultationFee} fee)
               </option>
             ))}
           </select>
+          {touched.doctorId && <FieldError error={fieldErrors.doctorId} />}
         </div>
 
         {selectedDoctor && (
@@ -166,45 +201,72 @@ export const BookAppointmentModal: React.FC<BookAppointmentModalProps> = ({
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              Consultation Date:
+              Consultation Date: <span className="text-rose-500">*</span>
             </label>
             <input
               type="date"
               value={date}
               min={new Date().toISOString().split('T')[0]}
-              onChange={(e) => setDate(e.target.value)}
-              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white"
+              onBlur={() => setTouched(prev => ({ ...prev, date: true }))}
+              onChange={(e) => {
+                setDate(e.target.value);
+                if (fieldErrors.date) setFieldErrors(prev => ({ ...prev, date: '' }));
+              }}
+              className={`w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-medium text-slate-800 focus:bg-white ${
+                touched.date && fieldErrors.date
+                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                  : 'border-slate-200 focus:ring-blue-500'
+              }`}
             />
+            {touched.date && <FieldError error={fieldErrors.date} />}
           </div>
 
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1.5">
-              Time Slot:
+              Time Slot: <span className="text-rose-500">*</span>
             </label>
             <select
               value={timeSlot}
-              onChange={(e) => setTimeSlot(e.target.value)}
-              className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs font-medium text-slate-800 focus:bg-white"
+              onBlur={() => setTouched(prev => ({ ...prev, timeSlot: true }))}
+              onChange={(e) => {
+                setTimeSlot(e.target.value);
+                if (fieldErrors.timeSlot) setFieldErrors(prev => ({ ...prev, timeSlot: '' }));
+              }}
+              className={`w-full p-2.5 bg-slate-50 border rounded-xl text-xs font-medium text-slate-800 focus:bg-white ${
+                touched.timeSlot && fieldErrors.timeSlot
+                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                  : 'border-slate-200 focus:ring-blue-500'
+              }`}
             >
               {timeSlots.map(slot => (
                 <option key={slot} value={slot}>{slot}</option>
               ))}
             </select>
+            {touched.timeSlot && <FieldError error={fieldErrors.timeSlot} />}
           </div>
         </div>
 
         {/* Symptoms / Notes */}
         <div>
           <label className="block text-xs font-bold text-slate-700 mb-1.5">
-            Symptoms / Reason for Visit:
+            Symptoms / Reason for Visit: <span className="text-rose-500">*</span>
           </label>
           <textarea
             value={symptoms}
-            onChange={(e) => setSymptoms(e.target.value)}
+            onBlur={() => setTouched(prev => ({ ...prev, symptoms: true }))}
+            onChange={(e) => {
+              setSymptoms(e.target.value);
+              if (fieldErrors.symptoms) setFieldErrors(prev => ({ ...prev, symptoms: '' }));
+            }}
             rows={3}
-            placeholder="Briefly describe your symptoms, recent health changes, or tests you'd like to discuss..."
-            className="w-full p-2.5 bg-slate-50 border border-slate-200 rounded-xl text-xs text-slate-800 focus:bg-white"
+            placeholder="Briefly describe your symptoms (e.g. chest tightness on exertion, fasting sugar check, joint pain)..."
+            className={`w-full p-2.5 bg-slate-50 border rounded-xl text-xs text-slate-800 focus:bg-white ${
+              touched.symptoms && fieldErrors.symptoms
+                ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                : 'border-slate-200 focus:ring-blue-500'
+            }`}
           />
+          {touched.symptoms && <FieldError error={fieldErrors.symptoms} />}
         </div>
 
         {/* Footer info */}

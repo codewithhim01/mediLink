@@ -1,55 +1,68 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, Suspense, lazy } from 'react';
 import { AuthProvider, useAuth } from './contexts/AuthContext.js';
 import { NotificationProvider } from './contexts/NotificationContext.js';
 import { LocationProvider } from './contexts/LocationContext.js';
 import { Navbar } from './components/common/Navbar.js';
 import { Sidebar } from './components/common/Sidebar.js';
+import { ErrorBoundary } from './components/common/ErrorBoundary.js';
+import { Loader2 } from 'lucide-react';
 
-// Public pages
+// Core Public Pages (eager loaded for instant first render)
 import { LandingPage } from './pages/public/LandingPage.js';
 import { DoctorDiscoveryPage } from './pages/public/DoctorDiscoveryPage.js';
 import { DoctorDetailPage } from './pages/public/DoctorDetailPage.js';
 import { TestComparisonPage } from './pages/public/TestComparisonPage.js';
 import { LabDiscoveryPage } from './pages/public/LabDiscoveryPage.js';
-import { LabDetailPage } from './pages/public/LabDetailPage.js';
 import { ClinicsPage } from './pages/public/ClinicsPage.js';
-import { ClinicDetailPage } from './pages/public/ClinicDetailPage.js';
 import { LoginPage } from './pages/public/LoginPage.js';
 import { RegisterPage } from './pages/public/RegisterPage.js';
 
-// Patient pages
-import { PatientDashboard } from './pages/patient/PatientDashboard.js';
-import { PatientAppointmentsPage } from './pages/patient/PatientAppointmentsPage.js';
-import { PatientLabBookingsPage } from './pages/patient/PatientLabBookingsPage.js';
-import { PatientReportsPage } from './pages/patient/PatientReportsPage.js';
-import { PatientReferralsPage } from './pages/patient/PatientReferralsPage.js';
-import { PatientProfilePage } from './pages/patient/PatientProfilePage.js';
+// Lazy Loaded Detail & Portal Pages (loaded on demand)
+const LabDetailPage = lazy(() => import('./pages/public/LabDetailPage.js').then(m => ({ default: m.LabDetailPage })));
+const ClinicDetailPage = lazy(() => import('./pages/public/ClinicDetailPage.js').then(m => ({ default: m.ClinicDetailPage })));
 
-// Doctor pages
-import { DoctorDashboard } from './pages/doctor/DoctorDashboard.js';
-import { DoctorQueueManagementPage } from './pages/doctor/DoctorQueueManagementPage.js';
-import { DoctorAppointmentsPage } from './pages/doctor/DoctorAppointmentsPage.js';
-import { DoctorReferralsPage } from './pages/doctor/DoctorReferralsPage.js';
-import { DoctorReportsPage } from './pages/doctor/DoctorReportsPage.js';
-import { DoctorProfilePage } from './pages/doctor/DoctorProfilePage.js';
+// Patient pages (lazy)
+const PatientDashboard = lazy(() => import('./pages/patient/PatientDashboard.js').then(m => ({ default: m.PatientDashboard })));
+const PatientAppointmentsPage = lazy(() => import('./pages/patient/PatientAppointmentsPage.js').then(m => ({ default: m.PatientAppointmentsPage })));
+const PatientLabBookingsPage = lazy(() => import('./pages/patient/PatientLabBookingsPage.js').then(m => ({ default: m.PatientLabBookingsPage })));
+const PatientReportsPage = lazy(() => import('./pages/patient/PatientReportsPage.js').then(m => ({ default: m.PatientReportsPage })));
+const PatientReferralsPage = lazy(() => import('./pages/patient/PatientReferralsPage.js').then(m => ({ default: m.PatientReferralsPage })));
+const PatientProfilePage = lazy(() => import('./pages/patient/PatientProfilePage.js').then(m => ({ default: m.PatientProfilePage })));
 
-// Clinic pages
-import { ClinicDashboard } from './pages/clinic/ClinicDashboard.js';
-import { ClinicDoctorsPage } from './pages/clinic/ClinicDoctorsPage.js';
-import { ClinicQueuesPage } from './pages/clinic/ClinicQueuesPage.js';
+// Doctor pages (lazy)
+const DoctorDashboard = lazy(() => import('./pages/doctor/DoctorDashboard.js').then(m => ({ default: m.DoctorDashboard })));
+const DoctorQueueManagementPage = lazy(() => import('./pages/doctor/DoctorQueueManagementPage.js').then(m => ({ default: m.DoctorQueueManagementPage })));
+const DoctorAppointmentsPage = lazy(() => import('./pages/doctor/DoctorAppointmentsPage.js').then(m => ({ default: m.DoctorAppointmentsPage })));
+const DoctorReferralsPage = lazy(() => import('./pages/doctor/DoctorReferralsPage.js').then(m => ({ default: m.DoctorReferralsPage })));
+const DoctorReportsPage = lazy(() => import('./pages/doctor/DoctorReportsPage.js').then(m => ({ default: m.DoctorReportsPage })));
+const DoctorProfilePage = lazy(() => import('./pages/doctor/DoctorProfilePage.js').then(m => ({ default: m.DoctorProfilePage })));
 
-// Laboratory pages
-import { LabDashboard } from './pages/laboratory/LabDashboard.js';
-import { LabTestCataloguePage } from './pages/laboratory/LabTestCataloguePage.js';
-import { LabBookingsPage } from './pages/laboratory/LabBookingsPage.js';
-import { LabSampleTrackingPage } from './pages/laboratory/LabSampleTrackingPage.js';
+// Clinic pages (lazy)
+const ClinicDashboard = lazy(() => import('./pages/clinic/ClinicDashboard.js').then(m => ({ default: m.ClinicDashboard })));
+const ClinicDoctorsPage = lazy(() => import('./pages/clinic/ClinicDoctorsPage.js').then(m => ({ default: m.ClinicDoctorsPage })));
+const ClinicQueuesPage = lazy(() => import('./pages/clinic/ClinicQueuesPage.js').then(m => ({ default: m.ClinicQueuesPage })));
 
-// Admin pages
-import { AdminDashboard } from './pages/admin/AdminDashboard.js';
-import { AdminVerificationsPage } from './pages/admin/AdminVerificationsPage.js';
-import { AdminUsersPage } from './pages/admin/AdminUsersPage.js';
-import { AdminAnalyticsPage } from './pages/admin/AdminAnalyticsPage.js';
-import { AdminAuditLogsPage } from './pages/admin/AdminAuditLogsPage.js';
+// Laboratory pages (lazy)
+const LabDashboard = lazy(() => import('./pages/laboratory/LabDashboard.js').then(m => ({ default: m.LabDashboard })));
+const LabTestCataloguePage = lazy(() => import('./pages/laboratory/LabTestCataloguePage.js').then(m => ({ default: m.LabTestCataloguePage })));
+const LabBookingsPage = lazy(() => import('./pages/laboratory/LabBookingsPage.js').then(m => ({ default: m.LabBookingsPage })));
+const LabSampleTrackingPage = lazy(() => import('./pages/laboratory/LabSampleTrackingPage.js').then(m => ({ default: m.LabSampleTrackingPage })));
+
+// Admin pages (lazy)
+const AdminDashboard = lazy(() => import('./pages/admin/AdminDashboard.js').then(m => ({ default: m.AdminDashboard })));
+const AdminVerificationsPage = lazy(() => import('./pages/admin/AdminVerificationsPage.js').then(m => ({ default: m.AdminVerificationsPage })));
+const AdminUsersPage = lazy(() => import('./pages/admin/AdminUsersPage.js').then(m => ({ default: m.AdminUsersPage })));
+const AdminAnalyticsPage = lazy(() => import('./pages/admin/AdminAnalyticsPage.js').then(m => ({ default: m.AdminAnalyticsPage })));
+const AdminAuditLogsPage = lazy(() => import('./pages/admin/AdminAuditLogsPage.js').then(m => ({ default: m.AdminAuditLogsPage })));
+
+const RouteLoadingSkeleton: React.FC = () => (
+  <div className="flex-1 flex items-center justify-center min-h-[50vh] p-8">
+    <div className="flex flex-col items-center gap-3 text-slate-500">
+      <Loader2 size={28} className="animate-spin text-teal-600" />
+      <p className="text-xs font-semibold">Loading MediLink view...</p>
+    </div>
+  </div>
+);
 
 const AppContent: React.FC = () => {
   const { user, isAuthenticated } = useAuth();
@@ -174,10 +187,18 @@ const AppContent: React.FC = () => {
       {isDashboardRoute && isAuthenticated && user ? (
         <div className="flex-1 flex flex-col md:flex-row overflow-hidden w-full max-w-full">
           <Sidebar currentPath={currentPath} navigate={navigate} />
-          <main className="flex-1 overflow-y-auto w-full min-w-0 max-w-full">{renderCurrentView()}</main>
+          <main className="flex-1 overflow-y-auto w-full min-w-0 max-w-full">
+            <Suspense fallback={<RouteLoadingSkeleton />}>
+              {renderCurrentView()}
+            </Suspense>
+          </main>
         </div>
       ) : (
-        <main className="flex-1 w-full min-w-0 max-w-full">{renderCurrentView()}</main>
+        <main className="flex-1 w-full min-w-0 max-w-full">
+          <Suspense fallback={<RouteLoadingSkeleton />}>
+            {renderCurrentView()}
+          </Suspense>
+        </main>
       )}
     </div>
   );
@@ -185,12 +206,14 @@ const AppContent: React.FC = () => {
 
 export default function App() {
   return (
-    <AuthProvider>
-      <NotificationProvider>
-        <LocationProvider>
-          <AppContent />
-        </LocationProvider>
-      </NotificationProvider>
-    </AuthProvider>
+    <ErrorBoundary>
+      <AuthProvider>
+        <NotificationProvider>
+          <LocationProvider>
+            <AppContent />
+          </LocationProvider>
+        </NotificationProvider>
+      </AuthProvider>
+    </ErrorBoundary>
   );
 }

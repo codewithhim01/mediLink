@@ -22,6 +22,8 @@ import { Badge } from '../../components/common/Badge.js';
 import { BookAppointmentModal } from '../../components/patient/BookAppointmentModal.js';
 import { useAuth } from '../../contexts/AuthContext.js';
 import { handleImageError } from '../../utils/imageUtils.js';
+import { validateMinLength } from '../../utils/validation.js';
+import { FieldError } from '../../components/common/FieldError.js';
 
 interface DoctorDetailPageProps {
   doctorId: string;
@@ -67,9 +69,16 @@ export const DoctorDetailPage: React.FC<DoctorDetailPageProps> = ({ doctorId, na
     setIsBookModalOpen(true);
   };
 
+  const [commentError, setCommentError] = useState<string | null>(null);
+
   const handleReviewSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!newComment.trim()) return;
+    const err = validateMinLength(newComment, 10, 'Review feedback');
+    if (err) {
+      setCommentError(err);
+      return;
+    }
+    setCommentError(null);
 
     if (!isAuthenticated) {
       await switchDemoRole('PATIENT');
@@ -82,7 +91,7 @@ export const DoctorDetailPage: React.FC<DoctorDetailPageProps> = ({ doctorId, na
         targetType: 'DOCTOR',
         targetId: doctorId,
         rating: newRating,
-        comment: newComment,
+        comment: newComment.trim(),
       });
 
       if (res.success) {
@@ -269,12 +278,19 @@ export const DoctorDetailPage: React.FC<DoctorDetailPageProps> = ({ doctorId, na
             <div>
               <textarea
                 value={newComment}
-                onChange={(e) => setNewComment(e.target.value)}
+                onChange={(e) => {
+                  setNewComment(e.target.value);
+                  if (commentError) setCommentError(null);
+                }}
                 rows={3}
-                placeholder="Share your experience regarding the consultation, bedside manner, or queue wait..."
-                className="w-full p-3 bg-white border border-slate-200 rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
-                required
+                placeholder="Share your experience regarding the consultation, bedside manner, or queue wait (min. 10 characters)..."
+                className={`w-full p-3 bg-white border rounded-xl text-xs text-slate-800 focus:outline-none focus:ring-2 font-medium ${
+                  commentError
+                    ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                    : 'border-slate-200 focus:ring-blue-500'
+                }`}
               />
+              <FieldError error={commentError} />
             </div>
 
             <div className="flex justify-end">

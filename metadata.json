@@ -1,6 +1,6 @@
 {
   "name": "MediLink - AI-Powered Healthcare & Diagnostic Marketplace",
   "description": "Unified healthcare ecosystem connecting patients, doctors, clinics, and laboratories with real-time queues, diagnostic test comparison, and AI medical report analysis.",
-  "requestFramePermissions": ["geolocation"],
+  "requestFramePermissions": [],
   "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
 }

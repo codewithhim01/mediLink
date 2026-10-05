@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { User as UserIcon, Heart, AlertCircle, ShieldCheck, Save, CheckCircle2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.js';
 import { handleImageError } from '../../utils/imageUtils.js';
+import { validateMinLength } from '../../utils/validation.js';
+import { FieldError } from '../../components/common/FieldError.js';
 
 export const PatientProfilePage: React.FC = () => {
   const { user, profile } = useAuth();
@@ -13,9 +15,21 @@ export const PatientProfilePage: React.FC = () => {
   const [emergencyContact, setEmergencyContact] = useState(profile?.emergencyContact || 'Amit Sharma (+91 98390 12345)');
   const [address, setAddress] = useState(profile?.address || 'B-4/112, Sector 4, Gomti Nagar, Lucknow');
   const [savedNotice, setSavedNotice] = useState(false);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
+    const errors: Record<string, string> = {};
+
+    const contactErr = validateMinLength(emergencyContact, 3, 'Emergency contact');
+    if (contactErr) errors.emergencyContact = contactErr;
+
+    const addrErr = validateMinLength(address, 5, 'Residential address');
+    if (addrErr) errors.address = addrErr;
+
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) return;
+
     setSavedNotice(true);
     setTimeout(() => setSavedNotice(false), 3000);
   };
@@ -109,25 +123,45 @@ export const PatientProfilePage: React.FC = () => {
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Emergency Contact Person</label>
+          <label className="block text-xs font-bold text-slate-700 mb-1">
+            Emergency Contact Person <span className="text-rose-500">*</span>
+          </label>
           <input
             type="text"
             value={emergencyContact}
-            onChange={(e) => setEmergencyContact(e.target.value)}
+            onChange={(e) => {
+              setEmergencyContact(e.target.value);
+              if (fieldErrors.emergencyContact) setFieldErrors(prev => ({ ...prev, emergencyContact: '' }));
+            }}
             placeholder="Full Name and Telephone Number"
-            className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white text-slate-800 font-medium"
+            className={`w-full px-3 py-2 text-xs bg-slate-50 border rounded-xl focus:bg-white text-slate-800 font-medium ${
+              fieldErrors.emergencyContact
+                ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                : 'border-slate-200'
+            }`}
           />
+          <FieldError error={fieldErrors.emergencyContact} />
         </div>
 
         <div>
-          <label className="block text-xs font-bold text-slate-700 mb-1">Residential Address</label>
+          <label className="block text-xs font-bold text-slate-700 mb-1">
+            Residential Address <span className="text-rose-500">*</span>
+          </label>
           <input
             type="text"
             value={address}
-            onChange={(e) => setAddress(e.target.value)}
+            onChange={(e) => {
+              setAddress(e.target.value);
+              if (fieldErrors.address) setFieldErrors(prev => ({ ...prev, address: '' }));
+            }}
             placeholder="Street address, City, State, ZIP"
-            className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white text-slate-800 font-medium"
+            className={`w-full px-3 py-2 text-xs bg-slate-50 border rounded-xl focus:bg-white text-slate-800 font-medium ${
+              fieldErrors.address
+                ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                : 'border-slate-200'
+            }`}
           />
+          <FieldError error={fieldErrors.address} />
         </div>
 
         <div className="pt-3 border-t border-slate-100 flex justify-end">

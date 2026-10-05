@@ -7,12 +7,13 @@ export function getSocket(): Socket {
     socketInstance = io(typeof window !== 'undefined' ? window.location.origin : '', {
       autoConnect: true,
       transports: ['polling', 'websocket'],
-      reconnectionAttempts: 3,
-      timeout: 4000,
+      reconnectionAttempts: 2,
+      timeout: 3000,
     });
 
     socketInstance.on('connect_error', () => {
       // Gracefully ignore WebSocket/polling connection errors in preview iframes
+      // to ensure UI thread and message passing never get blocked.
     });
   }
   return socketInstance;

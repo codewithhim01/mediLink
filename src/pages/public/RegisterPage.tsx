@@ -2,6 +2,14 @@ import React, { useState } from 'react';
 import { Activity, Mail, Lock, User as UserIcon, Phone, AlertCircle, Loader2, Stethoscope, Building2, TestTube2, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.js';
 import { Role } from '../../types/index.js';
+import {
+  validateEmail,
+  validatePassword,
+  validateName,
+  validatePhone,
+  validateRequired,
+} from '../../utils/validation.js';
+import { FieldError } from '../../components/common/FieldError.js';
 
 interface RegisterPageProps {
   navigate: (path: string) => void;
@@ -19,7 +27,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ navigate }) => {
   const [specialty, setSpecialty] = useState('Cardiology');
   const [qualification, setQualification] = useState('MBBS, MD');
   const [licenseNumber, setLicenseNumber] = useState('');
-  const [consultationFee, setConsultationFee] = useState(800);
+  const [consultationFee, setConsultationFee] = useState<number>(800);
 
   // Clinic specific fields
   const [clinicName, setClinicName] = useState('');
@@ -33,11 +41,71 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ navigate }) => {
 
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
+  const [touched, setTouched] = useState<Record<string, boolean>>({});
+
+  const markTouched = (field: string) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+  };
+
+  const validateForm = (): boolean => {
+    const errors: Record<string, string> = {};
+
+    const nameErr = validateName(name, role === 'DOCTOR' ? 'Doctor Name' : 'Full Name');
+    if (nameErr) errors.name = nameErr;
+
+    const emailErr = validateEmail(email);
+    if (emailErr) errors.email = emailErr;
+
+    const passErr = validatePassword(password, 6);
+    if (passErr) errors.password = passErr;
+
+    const phoneErr = validatePhone(phone, false);
+    if (phoneErr) errors.phone = phoneErr;
+
+    if (role === 'DOCTOR') {
+      const licErr = validateRequired(licenseNumber, 'Medical Council License Number');
+      if (licErr) errors.licenseNumber = licErr;
+      if (!consultationFee || consultationFee <= 0) {
+        errors.consultationFee = 'Consultation fee must be at least ₹100';
+      }
+    }
+
+    if (role === 'CLINIC') {
+      const clnErr = validateRequired(clinicName, 'Clinic Name');
+      if (clnErr) errors.clinicName = clnErr;
+      const regErr = validateRequired(registrationNo, 'State Registration Number');
+      if (regErr) errors.registrationNo = regErr;
+    }
+
+    if (role === 'LABORATORY') {
+      const labErr = validateRequired(labName, 'Laboratory Name');
+      if (labErr) errors.labName = labErr;
+      const licErr = validateRequired(licenseNo, 'NABL / ICMR Registration Number');
+      if (licErr) errors.licenseNo = licErr;
+    }
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password || !name) {
-      setError('Please fill in all required account fields.');
+    setTouched({
+      name: true,
+      email: true,
+      password: true,
+      phone: true,
+      licenseNumber: true,
+      consultationFee: true,
+      clinicName: true,
+      registrationNo: true,
+      labName: true,
+      licenseNo: true,
+    });
+
+    if (!validateForm()) {
+      setError('Please resolve the highlighted validation errors before submitting.');
       return;
     }
 
@@ -47,20 +115,20 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ navigate }) => {
     try {
       await register({
         role,
-        name,
-        email,
+        name: name.trim(),
+        email: email.trim().toLowerCase(),
         password,
-        phone,
+        phone: phone.trim() || undefined,
         specialty: role === 'DOCTOR' ? specialty : undefined,
         qualification: role === 'DOCTOR' ? qualification : undefined,
-        licenseNumber: role === 'DOCTOR' ? licenseNumber : undefined,
-        consultationFee: role === 'DOCTOR' ? consultationFee : undefined,
-        clinicName: role === 'CLINIC' ? clinicName : undefined,
-        address: (role === 'CLINIC' || role === 'LABORATORY') ? address : undefined,
-        city: (role === 'CLINIC' || role === 'LABORATORY') ? city : undefined,
-        registrationNo: role === 'CLINIC' ? registrationNo : undefined,
-        labName: role === 'LABORATORY' ? labName : undefined,
-        licenseNo: role === 'LABORATORY' ? licenseNo : undefined,
+        licenseNumber: role === 'DOCTOR' ? licenseNumber.trim() : undefined,
+        consultationFee: role === 'DOCTOR' ? Number(consultationFee) : undefined,
+        clinicName: role === 'CLINIC' ? clinicName.trim() : undefined,
+        address: (role === 'CLINIC' || role === 'LABORATORY') ? (address.trim() || 'Lucknow, Uttar Pradesh') : undefined,
+        city: (role === 'CLINIC' || role === 'LABORATORY') ? (city.trim() || 'Lucknow') : undefined,
+        registrationNo: role === 'CLINIC' ? registrationNo.trim() : undefined,
+        labName: role === 'LABORATORY' ? labName.trim() : undefined,
+        licenseNo: role === 'LABORATORY' ? licenseNo.trim() : undefined,
       });
 
       const paths: Record<Role, string> = {
@@ -72,7 +140,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ navigate }) => {
       };
       navigate(paths[role]);
     } catch (err: any) {
-      setError(err.message || 'Registration failed.');
+      setError(err.message || 'Registration failed. Please check your inputs.');
     } finally {
       setLoading(false);
     }
@@ -158,61 +226,103 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ navigate }) => {
         </div>
 
         {/* Common Form */}
-        <form onSubmit={handleSubmit} className="space-y-3.5">
+        <form onSubmit={handleSubmit} className="space-y-3.5" noValidate>
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Full Legal Name</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Full Legal Name <span className="text-rose-500">*</span>
+            </label>
             <div className="relative">
               <UserIcon size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="text"
                 value={name}
-                onChange={(e) => setName(e.target.value)}
+                onBlur={() => markTouched('name')}
+                onChange={(e) => {
+                  setName(e.target.value);
+                  if (fieldErrors.name) setFieldErrors(prev => ({ ...prev, name: '' }));
+                }}
                 placeholder={role === 'DOCTOR' ? 'Dr. Jane Smith, MD' : 'Full Name'}
-                className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                className={`w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border rounded-xl focus:bg-white focus:outline-none focus:ring-2 font-medium transition-colors ${
+                  touched.name && fieldErrors.name
+                    ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                    : 'border-slate-200 focus:ring-blue-500'
+                }`}
               />
             </div>
+            {touched.name && <FieldError error={fieldErrors.name} />}
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Email</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Email Address <span className="text-rose-500">*</span>
+              </label>
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onBlur={() => markTouched('email')}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: '' }));
+                }}
                 placeholder="name@domain.com"
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                className={`w-full px-3 py-2 text-xs bg-slate-50 border rounded-xl focus:bg-white focus:outline-none focus:ring-2 font-medium transition-colors ${
+                  touched.email && fieldErrors.email
+                    ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                    : 'border-slate-200 focus:ring-blue-500'
+                }`}
               />
+              {touched.email && <FieldError error={fieldErrors.email} />}
             </div>
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 mb-1">Password</label>
+              <label className="block text-xs font-bold text-slate-700 mb-1">
+                Password <span className="text-rose-500">*</span>
+              </label>
               <input
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onBlur={() => markTouched('password')}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: '' }));
+                }}
                 placeholder="At least 6 characters"
-                className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                className={`w-full px-3 py-2 text-xs bg-slate-50 border rounded-xl focus:bg-white focus:outline-none focus:ring-2 font-medium transition-colors ${
+                  touched.password && fieldErrors.password
+                    ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                    : 'border-slate-200 focus:ring-blue-500'
+                }`}
               />
+              {touched.password && <FieldError error={fieldErrors.password} />}
             </div>
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">Phone Number (Optional)</label>
             <input
-              type="text"
+              type="tel"
               value={phone}
-              onChange={(e) => setPhone(e.target.value)}
-              placeholder="+1 (555) 000-0000"
-              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+              onBlur={() => markTouched('phone')}
+              onChange={(e) => {
+                setPhone(e.target.value);
+                if (fieldErrors.phone) setFieldErrors(prev => ({ ...prev, phone: '' }));
+              }}
+              placeholder="+91 98765 43210"
+              className={`w-full px-3 py-2 text-xs bg-slate-50 border rounded-xl focus:bg-white focus:outline-none focus:ring-2 font-medium transition-colors ${
+                touched.phone && fieldErrors.phone
+                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                  : 'border-slate-200 focus:ring-blue-500'
+              }`}
             />
+            {touched.phone && <FieldError error={fieldErrors.phone} />}
           </div>
 
           {/* Role specific inputs */}
           {role === 'DOCTOR' && (
-            <div className="p-3 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-3">
+            <div className="p-3.5 bg-blue-50/50 rounded-2xl border border-blue-100 space-y-3">
               <p className="text-[11px] font-bold uppercase tracking-wider text-blue-900">Physician Credentials</p>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-700 mb-0.5">Specialty</label>
                   <input
@@ -223,42 +333,77 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ navigate }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-0.5">Consultation Fee ($)</label>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-0.5">
+                    Consultation Fee (₹) <span className="text-rose-500">*</span>
+                  </label>
                   <input
                     type="number"
+                    min="100"
+                    step="50"
                     value={consultationFee}
-                    onChange={(e) => setConsultationFee(Number(e.target.value))}
-                    className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
+                    onBlur={() => markTouched('consultationFee')}
+                    onChange={(e) => {
+                      setConsultationFee(Number(e.target.value));
+                      if (fieldErrors.consultationFee) setFieldErrors(prev => ({ ...prev, consultationFee: '' }));
+                    }}
+                    className={`w-full px-2.5 py-1.5 text-xs bg-white border rounded-lg ${
+                      touched.consultationFee && fieldErrors.consultationFee
+                        ? 'border-rose-400 bg-rose-50/20'
+                        : 'border-slate-200'
+                    }`}
                   />
+                  {touched.consultationFee && <FieldError error={fieldErrors.consultationFee} />}
                 </div>
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-0.5">Medical License #</label>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-0.5">
+                  Medical Council License # <span className="text-rose-500">*</span>
+                </label>
                 <input
                   type="text"
                   value={licenseNumber}
-                  onChange={(e) => setLicenseNumber(e.target.value)}
-                  placeholder="e.g. MD-OR-908122"
-                  className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
+                  onBlur={() => markTouched('licenseNumber')}
+                  onChange={(e) => {
+                    setLicenseNumber(e.target.value);
+                    if (fieldErrors.licenseNumber) setFieldErrors(prev => ({ ...prev, licenseNumber: '' }));
+                  }}
+                  placeholder="e.g. UPMC-89124"
+                  className={`w-full px-2.5 py-1.5 text-xs bg-white border rounded-lg ${
+                    touched.licenseNumber && fieldErrors.licenseNumber
+                      ? 'border-rose-400 bg-rose-50/20'
+                      : 'border-slate-200'
+                  }`}
                 />
+                {touched.licenseNumber && <FieldError error={fieldErrors.licenseNumber} />}
               </div>
             </div>
           )}
 
           {role === 'CLINIC' && (
-            <div className="p-3 bg-indigo-50/50 rounded-2xl border border-indigo-100 space-y-3">
+            <div className="p-3.5 bg-indigo-50/50 rounded-2xl border border-indigo-100 space-y-3">
               <p className="text-[11px] font-bold uppercase tracking-wider text-indigo-900">Clinic Facility Details</p>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-0.5">Clinic Name</label>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-0.5">
+                  Clinic Name <span className="text-rose-500">*</span>
+                </label>
                 <input
                   type="text"
                   value={clinicName}
-                  onChange={(e) => setClinicName(e.target.value)}
-                  placeholder="Metro Urgent & Specialist Center"
-                  className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
+                  onBlur={() => markTouched('clinicName')}
+                  onChange={(e) => {
+                    setClinicName(e.target.value);
+                    if (fieldErrors.clinicName) setFieldErrors(prev => ({ ...prev, clinicName: '' }));
+                  }}
+                  placeholder="e.g. Gomti Nagar Care Center"
+                  className={`w-full px-2.5 py-1.5 text-xs bg-white border rounded-lg ${
+                    touched.clinicName && fieldErrors.clinicName
+                      ? 'border-rose-400 bg-rose-50/20'
+                      : 'border-slate-200'
+                  }`}
                 />
+                {touched.clinicName && <FieldError error={fieldErrors.clinicName} />}
               </div>
-              <div className="grid grid-cols-2 gap-2">
+              <div className="grid grid-cols-2 gap-2.5">
                 <div>
                   <label className="block text-[11px] font-semibold text-slate-700 mb-0.5">City</label>
                   <input
@@ -269,41 +414,74 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ navigate }) => {
                   />
                 </div>
                 <div>
-                  <label className="block text-[11px] font-semibold text-slate-700 mb-0.5">State Reg. #</label>
+                  <label className="block text-[11px] font-semibold text-slate-700 mb-0.5">
+                    State Reg. # <span className="text-rose-500">*</span>
+                  </label>
                   <input
                     type="text"
                     value={registrationNo}
-                    onChange={(e) => setRegistrationNo(e.target.value)}
-                    placeholder="OR-CLIN-2026"
-                    className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
+                    onBlur={() => markTouched('registrationNo')}
+                    onChange={(e) => {
+                      setRegistrationNo(e.target.value);
+                      if (fieldErrors.registrationNo) setFieldErrors(prev => ({ ...prev, registrationNo: '' }));
+                    }}
+                    placeholder="UP-LKO-CLN-2024"
+                    className={`w-full px-2.5 py-1.5 text-xs bg-white border rounded-lg ${
+                      touched.registrationNo && fieldErrors.registrationNo
+                        ? 'border-rose-400 bg-rose-50/20'
+                        : 'border-slate-200'
+                    }`}
                   />
+                  {touched.registrationNo && <FieldError error={fieldErrors.registrationNo} />}
                 </div>
               </div>
             </div>
           )}
 
           {role === 'LABORATORY' && (
-            <div className="p-3 bg-amber-50/50 rounded-2xl border border-amber-100 space-y-3">
+            <div className="p-3.5 bg-amber-50/50 rounded-2xl border border-amber-100 space-y-3">
               <p className="text-[11px] font-bold uppercase tracking-wider text-amber-900">Laboratory Certification</p>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-0.5">Lab Legal Name</label>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-0.5">
+                  Lab Legal Name <span className="text-rose-500">*</span>
+                </label>
                 <input
                   type="text"
                   value={labName}
-                  onChange={(e) => setLabName(e.target.value)}
-                  placeholder="Apex Bio-Tech Diagnostics"
-                  className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
+                  onBlur={() => markTouched('labName')}
+                  onChange={(e) => {
+                    setLabName(e.target.value);
+                    if (fieldErrors.labName) setFieldErrors(prev => ({ ...prev, labName: '' }));
+                  }}
+                  placeholder="e.g. Apex Diagnostics Lucknow"
+                  className={`w-full px-2.5 py-1.5 text-xs bg-white border rounded-lg ${
+                    touched.labName && fieldErrors.labName
+                      ? 'border-rose-400 bg-rose-50/20'
+                      : 'border-slate-200'
+                  }`}
                 />
+                {touched.labName && <FieldError error={fieldErrors.labName} />}
               </div>
               <div>
-                <label className="block text-[11px] font-semibold text-slate-700 mb-0.5">NABL / ICMR Reg. #</label>
+                <label className="block text-[11px] font-semibold text-slate-700 mb-0.5">
+                  NABL / ICMR Reg. # <span className="text-rose-500">*</span>
+                </label>
                 <input
                   type="text"
                   value={licenseNo}
-                  onChange={(e) => setLicenseNo(e.target.value)}
+                  onBlur={() => markTouched('licenseNo')}
+                  onChange={(e) => {
+                    setLicenseNo(e.target.value);
+                    if (fieldErrors.licenseNo) setFieldErrors(prev => ({ ...prev, licenseNo: '' }));
+                  }}
                   placeholder="NABL-UP-77889"
-                  className="w-full px-2.5 py-1.5 text-xs bg-white border border-slate-200 rounded-lg"
+                  className={`w-full px-2.5 py-1.5 text-xs bg-white border rounded-lg ${
+                    touched.licenseNo && fieldErrors.licenseNo
+                      ? 'border-rose-400 bg-rose-50/20'
+                      : 'border-slate-200'
+                  }`}
                 />
+                {touched.licenseNo && <FieldError error={fieldErrors.licenseNo} />}
               </div>
             </div>
           )}

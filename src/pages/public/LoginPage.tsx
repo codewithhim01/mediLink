@@ -2,6 +2,8 @@ import React, { useState } from 'react';
 import { Activity, Lock, Mail, ArrowRight, AlertCircle, Loader2, Sparkles, UserCheck, Stethoscope, Building2, TestTube2, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.js';
 import { Role } from '../../types/index.js';
+import { validateEmail, validatePassword } from '../../utils/validation.js';
+import { FieldError } from '../../components/common/FieldError.js';
 
 interface LoginPageProps {
   navigate: (path: string) => void;
@@ -13,21 +15,37 @@ export const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
+  const [touched, setTouched] = useState<{ email?: boolean; password?: boolean }>({});
+
+  const validateForm = (): boolean => {
+    const errors: { email?: string; password?: string } = {};
+    const emailErr = validateEmail(email);
+    if (emailErr) errors.email = emailErr;
+
+    const passErr = validatePassword(password, 1);
+    if (passErr) errors.password = passErr;
+
+    setFieldErrors(errors);
+    return Object.keys(errors).length === 0;
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!email || !password) {
-      setError('Please enter both email and password.');
+    setTouched({ email: true, password: true });
+
+    if (!validateForm()) {
+      setError('Please provide a valid email and password.');
       return;
     }
 
     setLoading(true);
     setError(null);
     try {
-      await login(email, password);
+      await login(email.trim().toLowerCase(), password);
       navigate('/');
     } catch (err: any) {
-      setError(err.message || 'Invalid credentials.');
+      setError(err.message || 'Invalid email or password.');
     } finally {
       setLoading(false);
     }
@@ -121,33 +139,55 @@ export const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
         </div>
 
         {/* Standard Form */}
-        <form onSubmit={handleSubmit} className="space-y-4">
+        <form onSubmit={handleSubmit} className="space-y-4" noValidate>
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Email Address</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Email Address <span className="text-rose-500">*</span>
+            </label>
             <div className="relative">
               <Mail size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="email"
                 value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onBlur={() => setTouched(prev => ({ ...prev, email: true }))}
+                onChange={(e) => {
+                  setEmail(e.target.value);
+                  if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: undefined }));
+                }}
                 placeholder="name@example.com"
-                className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                className={`w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border rounded-xl focus:bg-white focus:outline-none focus:ring-2 font-medium transition-colors ${
+                  touched.email && fieldErrors.email
+                    ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                    : 'border-slate-200 focus:ring-blue-500'
+                }`}
               />
             </div>
+            {touched.email && <FieldError error={fieldErrors.email} />}
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Password</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Password <span className="text-rose-500">*</span>
+            </label>
             <div className="relative">
               <Lock size={16} className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400" />
               <input
                 type="password"
                 value={password}
-                onChange={(e) => setPassword(e.target.value)}
+                onBlur={() => setTouched(prev => ({ ...prev, password: true }))}
+                onChange={(e) => {
+                  setPassword(e.target.value);
+                  if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: undefined }));
+                }}
                 placeholder="••••••••"
-                className="w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-medium"
+                className={`w-full pl-9 pr-3 py-2 text-xs bg-slate-50 border rounded-xl focus:bg-white focus:outline-none focus:ring-2 font-medium transition-colors ${
+                  touched.password && fieldErrors.password
+                    ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                    : 'border-slate-200 focus:ring-blue-500'
+                }`}
               />
             </div>
+            {touched.password && <FieldError error={fieldErrors.password} />}
           </div>
 
           <button

@@ -3,6 +3,8 @@ import { Stethoscope, DollarSign, Clock, Save, CheckCircle2, ShieldCheck } from 
 import { useAuth } from '../../contexts/AuthContext.js';
 import { api } from '../../services/api.js';
 import { handleImageError } from '../../utils/imageUtils.js';
+import { validateRequired } from '../../utils/validation.js';
+import { FieldError } from '../../components/common/FieldError.js';
 
 export const DoctorProfilePage: React.FC = () => {
   const { user, profile, refreshProfile } = useAuth();
@@ -19,6 +21,7 @@ export const DoctorProfilePage: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [notice, setNotice] = useState<string | null>(null);
   const [errorNotice, setErrorNotice] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 
   useEffect(() => {
     if (profile) {
@@ -45,19 +48,41 @@ export const DoctorProfilePage: React.FC = () => {
 
   const handleSave = async (e: React.FormEvent) => {
     e.preventDefault();
+    const errors: Record<string, string> = {};
+
+    const specErr = validateRequired(specialty, 'Medical Specialty');
+    if (specErr) errors.specialty = specErr;
+
+    const qualErr = validateRequired(qualification, 'Qualifications');
+    if (qualErr) errors.qualification = qualErr;
+
+    if (!consultationFee || consultationFee < 100) {
+      errors.consultationFee = 'Consultation fee must be at least ₹100';
+    }
+
+    if (!consultationDuration || consultationDuration < 5) {
+      errors.consultationDuration = 'Duration must be at least 5 minutes';
+    }
+
+    setFieldErrors(errors);
+    if (Object.keys(errors).length > 0) {
+      setErrorNotice('Please resolve highlighted form validation errors.');
+      return;
+    }
+
     setLoading(true);
     setNotice(null);
     setErrorNotice(null);
 
     try {
       const res = await api.updateDoctorProfile({
-        specialty,
-        subSpecialty,
-        experienceYears,
-        qualification,
-        consultationFee,
-        consultationDuration,
-        bio,
+        specialty: specialty.trim(),
+        subSpecialty: subSpecialty.trim(),
+        experienceYears: Number(experienceYears),
+        qualification: qualification.trim(),
+        consultationFee: Number(consultationFee),
+        consultationDuration: Number(consultationDuration),
+        bio: bio.trim(),
         availability,
       });
 
@@ -116,14 +141,23 @@ export const DoctorProfilePage: React.FC = () => {
 
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Primary Specialty</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Primary Specialty <span className="text-rose-500">*</span>
+            </label>
             <input
               type="text"
               value={specialty}
-              onChange={(e) => setSpecialty(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white text-slate-800 font-semibold"
-              required
+              onChange={(e) => {
+                setSpecialty(e.target.value);
+                if (fieldErrors.specialty) setFieldErrors(prev => ({ ...prev, specialty: '' }));
+              }}
+              className={`w-full px-3 py-2 text-xs bg-slate-50 border rounded-xl focus:bg-white text-slate-800 font-semibold ${
+                fieldErrors.specialty
+                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                  : 'border-slate-200'
+              }`}
             />
+            <FieldError error={fieldErrors.specialty} />
           </div>
 
           <div>
@@ -137,47 +171,79 @@ export const DoctorProfilePage: React.FC = () => {
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Qualifications / Degrees</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Qualifications / Degrees <span className="text-rose-500">*</span>
+            </label>
             <input
               type="text"
               value={qualification}
-              onChange={(e) => setQualification(e.target.value)}
-              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white text-slate-800 font-medium"
-              required
+              onChange={(e) => {
+                setQualification(e.target.value);
+                if (fieldErrors.qualification) setFieldErrors(prev => ({ ...prev, qualification: '' }));
+              }}
+              className={`w-full px-3 py-2 text-xs bg-slate-50 border rounded-xl focus:bg-white text-slate-800 font-medium ${
+                fieldErrors.qualification
+                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                  : 'border-slate-200'
+              }`}
             />
+            <FieldError error={fieldErrors.qualification} />
           </div>
 
           <div>
             <label className="block text-xs font-bold text-slate-700 mb-1">Years of Practice</label>
             <input
               type="number"
+              min="0"
+              max="60"
               value={experienceYears}
               onChange={(e) => setExperienceYears(Number(e.target.value))}
               className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white text-slate-800 font-bold"
-              required
             />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Consultation Fee (₹ INR)</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Consultation Fee (₹ INR) <span className="text-rose-500">*</span>
+            </label>
             <input
               type="number"
+              min="100"
+              step="50"
               value={consultationFee}
-              onChange={(e) => setConsultationFee(Number(e.target.value))}
-              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white text-slate-800 font-bold"
-              required
+              onChange={(e) => {
+                setConsultationFee(Number(e.target.value));
+                if (fieldErrors.consultationFee) setFieldErrors(prev => ({ ...prev, consultationFee: '' }));
+              }}
+              className={`w-full px-3 py-2 text-xs bg-slate-50 border rounded-xl focus:bg-white text-slate-800 font-bold ${
+                fieldErrors.consultationFee
+                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                  : 'border-slate-200'
+              }`}
             />
+            <FieldError error={fieldErrors.consultationFee} />
           </div>
 
           <div>
-            <label className="block text-xs font-bold text-slate-700 mb-1">Consultation Duration (Minutes)</label>
+            <label className="block text-xs font-bold text-slate-700 mb-1">
+              Consultation Duration (Minutes) <span className="text-rose-500">*</span>
+            </label>
             <input
               type="number"
+              min="5"
+              step="5"
               value={consultationDuration}
-              onChange={(e) => setConsultationDuration(Number(e.target.value))}
-              className="w-full px-3 py-2 text-xs bg-slate-50 border border-slate-200 rounded-xl focus:bg-white text-slate-800 font-bold"
-              required
+              onChange={(e) => {
+                setConsultationDuration(Number(e.target.value));
+                if (fieldErrors.consultationDuration) setFieldErrors(prev => ({ ...prev, consultationDuration: '' }));
+              }}
+              className={`w-full px-3 py-2 text-xs bg-slate-50 border rounded-xl focus:bg-white text-slate-800 font-bold ${
+                fieldErrors.consultationDuration
+                  ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'
+                  : 'border-slate-200'
+              }`}
             />
+            <FieldError error={fieldErrors.consultationDuration} />
           </div>
         </div>
 
