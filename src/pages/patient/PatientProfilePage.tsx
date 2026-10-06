@@ -1,12 +1,14 @@
 import React, { useState } from 'react';
-import { User as UserIcon, Heart, AlertCircle, ShieldCheck, Save, CheckCircle2 } from 'lucide-react';
+import { User as UserIcon, Heart, AlertCircle, ShieldCheck, Save, CheckCircle2, Trash2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.js';
 import { handleImageError } from '../../utils/imageUtils.js';
 import { validateMinLength } from '../../utils/validation.js';
 import { FieldError } from '../../components/common/FieldError.js';
+import { DeleteAccountModal } from '../../components/common/DeleteAccountModal.js';
 
 export const PatientProfilePage: React.FC = () => {
   const { user, profile } = useAuth();
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   const [dob, setDob] = useState(profile?.dob || '1990-08-15');
   const [gender, setGender] = useState(profile?.gender || 'Male');
@@ -174,6 +176,34 @@ export const PatientProfilePage: React.FC = () => {
           </button>
         </div>
       </form>
+
+      {/* Danger Zone: Account Deletion */}
+      <div className="bg-white rounded-3xl border border-rose-200 p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-black text-rose-700 flex items-center gap-2">
+              <Trash2 size={16} />
+              Danger Zone: Delete Account
+            </h3>
+            <p className="text-xs text-slate-500 mt-1 max-w-xl">
+              Permanently delete your MediLink account and all associated patient records, prescriptions, test bookings, and clinical history. This action cannot be reversed.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowDeleteModal(true)}
+            className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer self-start sm:self-auto shrink-0"
+          >
+            <Trash2 size={14} />
+            <span>Delete Account</span>
+          </button>
+        </div>
+      </div>
+
+      <DeleteAccountModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+      />
     </div>
   );
 };

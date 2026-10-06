@@ -82,6 +82,23 @@ const AppContent: React.FC = () => {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []);
 
+  // When logged in as any user or admin, open dashboard instead of home page
+  useEffect(() => {
+    if (user && (currentPath === '/' || currentPath === '/login')) {
+      const getRoleDashboardPath = (role: string) => {
+        switch (role) {
+          case 'PATIENT': return '/patient/dashboard';
+          case 'DOCTOR': return '/doctor/dashboard';
+          case 'CLINIC': return '/clinic/dashboard';
+          case 'LABORATORY': return '/laboratory/dashboard';
+          case 'ADMIN': return '/admin/dashboard';
+          default: return '/';
+        }
+      };
+      navigate(getRoleDashboardPath(user.role));
+    }
+  }, [user, currentPath]);
+
   const isDashboardRoute =
     currentPath.startsWith('/patient') ||
     currentPath.startsWith('/doctor') ||

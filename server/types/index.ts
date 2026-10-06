@@ -23,6 +23,7 @@ export interface User {
   passwordHash: string;
   name: string;
   role: Role;
+  adminRole?: 'PRIMARY' | 'CO_ADMIN';
   phone?: string;
   avatarUrl?: string;
   status: UserStatus;

@@ -1,24 +1,53 @@
 import React, { useState, useEffect } from 'react';
-import { ShieldCheck, Users, Stethoscope, TestTube2, DollarSign, Activity, FileText, CheckCircle2, RotateCcw } from 'lucide-react';
+import {
+  ShieldCheck,
+  Users,
+  Stethoscope,
+  TestTube2,
+  DollarSign,
+  Activity,
+  FileText,
+  CheckCircle2,
+  RotateCcw,
+  UserCog,
+  UserPlus
+} from 'lucide-react';
 import { api } from '../../services/api.js';
+import { useAuth } from '../../contexts/AuthContext.js';
+import { handleImageError } from '../../utils/imageUtils.js';
+import { EditAdminModal } from '../../components/admin/EditAdminModal.js';
+import { CreateAdminModal } from '../../components/admin/CreateAdminModal.js';
+import { AppointCoAdminModal } from '../../components/admin/AppointCoAdminModal.js';
 
 interface AdminDashboardProps {
   navigate: (path: string) => void;
 }
 
 export const AdminDashboard: React.FC<AdminDashboardProps> = ({ navigate }) => {
+  const { user: currentAdmin } = useAuth();
   const [stats, setStats] = useState<any>(null);
+  const [users, setUsers] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [resetNotice, setResetNotice] = useState<string | null>(null);
   const [resetError, setResetError] = useState<string | null>(null);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [resetting, setResetting] = useState(false);
 
+  const [showEditAdminModal, setShowEditAdminModal] = useState(false);
+  const [showCreateAdminModal, setShowCreateAdminModal] = useState(false);
+  const [showAppointCoAdminModal, setShowAppointCoAdminModal] = useState(false);
+
   const fetchStats = async () => {
     try {
-      const res = await api.getAdminStats();
-      if (res.success && res.data) {
-        setStats(res.data);
+      const [statsRes, usersRes] = await Promise.all([
+        api.getAdminStats(),
+        api.getAdminUsers()
+      ]);
+      if (statsRes.success && statsRes.data) {
+        setStats(statsRes.data);
+      }
+      if (usersRes.success && usersRes.data) {
+        setUsers(usersRes.data);
       }
     } catch {
       // ignore
@@ -65,20 +94,87 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ navigate }) => {
           </p>
         </div>
 
-        <div className="flex items-center gap-3">
+        <div className="flex flex-wrap items-center gap-2.5">
+          <button
+            onClick={() => setShowEditAdminModal(true)}
+            className="px-3.5 py-2.5 bg-white text-slate-900 font-bold rounded-xl text-xs hover:bg-slate-100 transition-colors shadow-sm cursor-pointer flex items-center gap-1.5"
+            title="Modify administrator name, email, phone, or password"
+          >
+            <UserCog size={15} className="text-rose-600" />
+            <span>Modify My Details</span>
+          </button>
+          <button
+            onClick={() => setShowAppointCoAdminModal(true)}
+            className="px-3.5 py-2.5 bg-indigo-600 hover:bg-indigo-500 text-white font-bold rounded-xl text-xs transition-colors shadow-sm cursor-pointer flex items-center gap-1.5"
+            title="Appoint a Co-Administrator"
+          >
+            <ShieldCheck size={15} />
+            <span>+ Appoint Co-Admin</span>
+          </button>
+          <button
+            onClick={() => setShowCreateAdminModal(true)}
+            className="px-3.5 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs transition-colors shadow-sm cursor-pointer flex items-center gap-1.5"
+            title="Provision an additional administrator account"
+          >
+            <UserPlus size={15} />
+            <span>+ Add Admin Account</span>
+          </button>
           <button
             onClick={() => navigate('/admin/verifications')}
-            className="px-4 py-2.5 bg-rose-600 hover:bg-rose-500 text-white font-bold rounded-xl text-xs transition-colors shadow-sm cursor-pointer"
+            className="px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl text-xs transition-colors cursor-pointer border border-white/20"
           >
             Review Verifications
           </button>
           <button
             onClick={() => setShowResetConfirm(true)}
-            className="px-3.5 py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl text-xs flex items-center gap-1.5 transition-colors cursor-pointer border border-white/20"
+            className="px-3 py-2.5 bg-white/10 hover:bg-white/20 text-white font-semibold rounded-xl text-xs flex items-center gap-1.5 transition-colors cursor-pointer border border-white/20"
             title="Reset system database to seed data"
           >
             <RotateCcw size={14} />
-            <span>Reset Database</span>
+            <span>Reset Demo</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Administrator Account Management Card */}
+      <div className="bg-white rounded-3xl border border-slate-200/80 p-5 sm:p-6 shadow-xs flex flex-col md:flex-row items-start md:items-center justify-between gap-5">
+        <div className="flex items-center gap-4">
+          <img
+            src={currentAdmin?.avatarUrl || `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(currentAdmin?.name || 'Admin')}`}
+            alt="Admin avatar"
+            onError={(e) => handleImageError(e, currentAdmin?.name)}
+            className="w-14 h-14 rounded-2xl border-2 border-rose-100 object-cover shadow-xs shrink-0"
+          />
+          <div className="space-y-0.5">
+            <div className="flex items-center gap-2">
+              <h3 className="text-base font-bold text-slate-900">{currentAdmin?.name || 'MediLink Lucknow Admin'}</h3>
+              <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-rose-50 text-rose-700 border border-rose-200">
+                Active Administrator
+              </span>
+            </div>
+            <p className="text-xs text-slate-600 font-mono">
+              {currentAdmin?.email || 'admin@medilink.com'} • {currentAdmin?.phone || '+91 522 220 9001'}
+            </p>
+            <p className="text-[11px] text-slate-400">
+              Admin User ID: <span className="font-mono">{currentAdmin?.id || 'usr-admin-1'}</span> • Platform Authority: <span className="font-semibold text-emerald-600">Full Executive Access</span>
+            </p>
+          </div>
+        </div>
+
+        <div className="flex items-center gap-2.5 self-stretch sm:self-auto justify-end">
+          <button
+            onClick={() => setShowEditAdminModal(true)}
+            className="px-3.5 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+          >
+            <UserCog size={14} className="text-slate-600" />
+            <span>Edit My Details</span>
+          </button>
+          <button
+            onClick={() => setShowCreateAdminModal(true)}
+            className="px-3.5 py-2 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer"
+          >
+            <UserPlus size={14} />
+            <span>Add Admin</span>
           </button>
         </div>
       </div>
@@ -213,6 +309,25 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ navigate }) => {
           </p>
         </div>
       </div>
+
+      <EditAdminModal
+        isOpen={showEditAdminModal}
+        onClose={() => setShowEditAdminModal(false)}
+        onSuccess={fetchStats}
+      />
+
+      <AppointCoAdminModal
+        isOpen={showAppointCoAdminModal}
+        onClose={() => setShowAppointCoAdminModal(false)}
+        onSuccess={fetchStats}
+        existingUsers={users}
+      />
+
+      <CreateAdminModal
+        isOpen={showCreateAdminModal}
+        onClose={() => setShowCreateAdminModal(false)}
+        onSuccess={fetchStats}
+      />
     </div>
   );
 };

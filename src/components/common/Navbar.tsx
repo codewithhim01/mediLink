@@ -93,7 +93,14 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
           {/* Logo & Brand */}
           <div className="flex items-center gap-2 sm:gap-5 shrink-0 min-w-0">
             <button
-              onClick={() => { navigate('/'); setMobileMenuOpen(false); }}
+              onClick={() => {
+                if (isAuthenticated && user) {
+                  navigate(getDashboardPath(user.role));
+                } else {
+                  navigate('/');
+                }
+                setMobileMenuOpen(false);
+              }}
               className="flex items-center gap-1.5 sm:gap-2 cursor-pointer group text-left shrink-0"
             >
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-blue-500 to-teal-400 flex items-center justify-center text-slate-950 shadow-md shadow-teal-500/20 group-hover:scale-105 transition-transform shrink-0">

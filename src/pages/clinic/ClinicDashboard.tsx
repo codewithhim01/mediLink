@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
-import { Building2, Stethoscope, Clock, Users, Calendar, MapPin, ShieldCheck, ArrowRight } from 'lucide-react';
+import { Building2, Stethoscope, Clock, Users, Calendar, MapPin, ShieldCheck, ArrowRight, Trash2 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.js';
 import { api } from '../../services/api.js';
 import { Doctor, Appointment } from '../../types/index.js';
 import { Badge } from '../../components/common/Badge.js';
 import { handleImageError } from '../../utils/imageUtils.js';
+import { DeleteAccountModal } from '../../components/common/DeleteAccountModal.js';
 
 interface ClinicDashboardProps {
   navigate: (path: string) => void;
@@ -15,6 +16,7 @@ export const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ navigate }) =>
   const [doctors, setDoctors] = useState<Doctor[]>([]);
   const [appointments, setAppointments] = useState<Appointment[]>([]);
   const [loading, setLoading] = useState(true);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
 
   useEffect(() => {
     Promise.all([api.getDoctors(), api.getAppointments()]).then(([docRes, aptRes]) => {
@@ -127,6 +129,35 @@ export const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ navigate }) =>
           ))}
         </div>
       </div>
+
+      {/* Danger Zone: Clinic Facility Account Deletion */}
+      <div className="bg-white rounded-3xl border border-rose-200 p-6 shadow-xs space-y-4">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <h3 className="text-sm font-black text-rose-700 flex items-center gap-2">
+              <Trash2 size={16} />
+              Danger Zone: Delete Clinic Account
+            </h3>
+            <p className="text-xs text-slate-500 mt-1 max-w-xl">
+              Permanently close and delete this clinic facility account. This removes your clinic profile, unlinks affiliated physicians, and purges operational queues.
+            </p>
+          </div>
+          <button
+            type="button"
+            onClick={() => setShowDeleteModal(true)}
+            className="px-4 py-2.5 bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 rounded-xl text-xs font-bold transition-colors flex items-center gap-1.5 cursor-pointer self-start sm:self-auto shrink-0"
+          >
+            <Trash2 size={14} />
+            <span>Delete Clinic Account</span>
+          </button>
+        </div>
+      </div>
+
+      <DeleteAccountModal
+        isOpen={showDeleteModal}
+        onClose={() => setShowDeleteModal(false)}
+        navigate={navigate}
+      />
     </div>
   );
 };

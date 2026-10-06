@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Activity, Lock, Mail, ArrowRight, AlertCircle, Loader2, Sparkles, UserCheck, Stethoscope, Building2, TestTube2, ShieldCheck } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.js';
 import { Role } from '../../types/index.js';
@@ -10,13 +10,27 @@ interface LoginPageProps {
 }
 
 export const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
-  const { login, switchDemoRole } = useAuth();
+  const { user, login, switchDemoRole } = useAuth();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<{ email?: string; password?: string }>({});
   const [touched, setTouched] = useState<{ email?: boolean; password?: boolean }>({});
+
+  const roleDashboardPaths: Record<Role, string> = {
+    PATIENT: '/patient/dashboard',
+    DOCTOR: '/doctor/dashboard',
+    CLINIC: '/clinic/dashboard',
+    LABORATORY: '/laboratory/dashboard',
+    ADMIN: '/admin/dashboard',
+  };
+
+  useEffect(() => {
+    if (user) {
+      navigate(roleDashboardPaths[user.role] || '/');
+    }
+  }, [user]);
 
   const validateForm = (): boolean => {
     const errors: { email?: string; password?: string } = {};
@@ -42,8 +56,12 @@ export const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
     setLoading(true);
     setError(null);
     try {
-      await login(email.trim().toLowerCase(), password);
-      navigate('/');
+      const loggedUser = await login(email.trim().toLowerCase(), password);
+      if (loggedUser) {
+        navigate(roleDashboardPaths[loggedUser.role] || '/');
+      } else {
+        navigate('/');
+      }
     } catch (err: any) {
       setError(err.message || 'Invalid email or password.');
     } finally {
@@ -56,14 +74,7 @@ export const LoginPage: React.FC<LoginPageProps> = ({ navigate }) => {
     setError(null);
     try {
       await switchDemoRole(role);
-      const paths: Record<Role, string> = {
-        PATIENT: '/patient/dashboard',
-        DOCTOR: '/doctor/dashboard',
-        CLINIC: '/clinic/dashboard',
-        LABORATORY: '/laboratory/dashboard',
-        ADMIN: '/admin/dashboard',
-      };
-      navigate(paths[role]);
+      navigate(roleDashboardPaths[role] || '/');
     } catch (err: any) {
       setError(err.message || 'Demo login failed');
     } finally {

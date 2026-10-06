@@ -9,9 +9,10 @@ interface AuthContextType {
   token: string | null;
   isAuthenticated: boolean;
   isLoading: boolean;
-  login: (email: string, password: string) => Promise<void>;
+  login: (email: string, password: string) => Promise<User | null>;
   register: (data: any) => Promise<void>;
   logout: () => void;
+  deleteAccount: (password?: string) => Promise<any>;
   switchDemoRole: (role: Role) => Promise<void>;
   refreshProfile: () => Promise<void>;
 }
@@ -55,7 +56,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     fetchCurrentUser();
   }, [token]);
 
-  const login = async (email: string, password: string) => {
+  const login = async (email: string, password: string): Promise<User | null> => {
     setIsLoading(true);
     try {
       const res = await api.login({ email, password });
@@ -65,7 +66,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         setUser(res.user);
         setProfile(res.profile);
         joinUserRoom(res.user.id);
+        return res.user;
       }
+      return null;
     } finally {
       setIsLoading(false);
     }
@@ -91,6 +94,17 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setToken(null);
     setUser(null);
     setProfile(null);
+  };
+
+  const deleteAccount = async (password?: string) => {
+    setIsLoading(true);
+    try {
+      const res = await api.deleteMyAccount(password);
+      logout();
+      return res;
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const switchDemoRole = async (role: Role) => {
@@ -123,6 +137,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         register,
         logout,
+        deleteAccount,
         switchDemoRole,
         refreshProfile,
       }}

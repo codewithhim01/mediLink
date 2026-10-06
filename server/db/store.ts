@@ -122,6 +122,88 @@ class DatabaseStore {
     }
     return null;
   }
+  public deleteUser(userId: string): { success: boolean; error?: string } {
+    const user = this.findUserById(userId);
+    if (!user) {
+      return { success: false, error: 'User account not found.' };
+    }
+
+    if (user.role === 'ADMIN') {
+      const adminCount = this.data.users.filter(u => u.role === 'ADMIN').length;
+      if (adminCount <= 1) {
+        return { success: false, error: 'Cannot delete the only remaining system administrator account.' };
+      }
+    }
+
+    // Role-specific cascading cleanup
+    if (user.role === 'PATIENT') {
+      const pat = this.data.patientProfiles.find(p => p.userId === userId);
+      const patId = pat ? pat.id : '';
+
+      this.data.patientProfiles = this.data.patientProfiles.filter(p => p.userId !== userId);
+
+      const patBookingIds = new Set(
+        this.data.testBookings
+          .filter(b => b.patientId === patId || b.patientId === userId)
+          .map(b => b.id)
+      );
+      this.data.samples = this.data.samples.filter(s => !patBookingIds.has(s.testBookingId));
+      this.data.testBookings = this.data.testBookings.filter(b => b.patientId !== patId && b.patientId !== userId);
+
+      this.data.appointments = this.data.appointments.filter(a => a.patientId !== patId && a.patientId !== userId);
+      this.data.medicalReports = this.data.medicalReports.filter(r => r.patientId !== patId && r.patientId !== userId);
+      this.data.referrals = this.data.referrals.filter(r => r.patientId !== patId && r.patientId !== userId);
+      this.data.queueTickets = this.data.queueTickets.filter(q => q.patientId !== patId && q.patientId !== userId);
+      this.data.reviews = this.data.reviews.filter(r => r.patientId !== patId && r.patientId !== userId);
+    } else if (user.role === 'DOCTOR') {
+      const doc = this.data.doctorProfiles.find(d => d.userId === userId);
+      const docId = doc ? doc.id : '';
+
+      this.data.doctorProfiles = this.data.doctorProfiles.filter(d => d.userId !== userId);
+      this.data.clinicDoctors = this.data.clinicDoctors.filter(cd => cd.doctorId !== docId);
+      this.data.appointments = this.data.appointments.filter(a => a.doctorId !== docId);
+
+      const docQueueIds = new Set(this.data.queues.filter(q => q.doctorId === docId).map(q => q.id));
+      this.data.queueTickets = this.data.queueTickets.filter(qt => !docQueueIds.has(qt.queueId));
+      this.data.queues = this.data.queues.filter(q => q.doctorId !== docId);
+
+      this.data.reviews = this.data.reviews.filter(r => !(r.targetType === 'DOCTOR' && r.targetId === docId));
+      this.data.referrals = this.data.referrals.filter(r => r.doctorId !== docId);
+    } else if (user.role === 'CLINIC') {
+      const clinic = this.data.clinics.find(c => c.userId === userId);
+      const clinicId = clinic ? clinic.id : '';
+
+      this.data.clinics = this.data.clinics.filter(c => c.userId !== userId);
+      this.data.clinicDoctors = this.data.clinicDoctors.filter(cd => cd.clinicId !== clinicId);
+      this.data.doctorProfiles.forEach(d => {
+        if (d.clinicId === clinicId) {
+          d.clinicId = undefined;
+        }
+      });
+      this.data.queues = this.data.queues.filter(q => q.clinicId !== clinicId);
+      this.data.reviews = this.data.reviews.filter(r => !(r.targetType === 'CLINIC' && r.targetId === clinicId));
+    } else if (user.role === 'LABORATORY') {
+      const lab = this.data.laboratories.find(l => l.userId === userId);
+      const labId = lab ? lab.id : '';
+
+      this.data.laboratories = this.data.laboratories.filter(l => l.userId !== userId);
+      this.data.diagnosticTests = this.data.diagnosticTests.filter(t => t.labId !== labId);
+
+      const labBookingIds = new Set(this.data.testBookings.filter(b => b.labId === labId).map(b => b.id));
+      this.data.samples = this.data.samples.filter(s => !labBookingIds.has(s.testBookingId));
+      this.data.testBookings = this.data.testBookings.filter(b => b.labId !== labId);
+      this.data.reviews = this.data.reviews.filter(r => !(r.targetType === 'LABORATORY' && r.targetId === labId));
+    }
+
+    // Remove user notifications
+    this.data.notifications = this.data.notifications.filter(n => n.userId !== userId);
+
+    // Remove user record
+    this.data.users = this.data.users.filter(u => u.id !== userId);
+
+    this.save();
+    return { success: true };
+  }
 
   // --- Patient Profiles ---
   public getPatientProfiles() { return this.data.patientProfiles; }

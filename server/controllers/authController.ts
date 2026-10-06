@@ -13,7 +13,7 @@ const registerSchema = z.object({
   email: z.string().email(),
   password: z.string().min(6),
   name: z.string().min(2),
-  role: z.enum(['PATIENT', 'DOCTOR', 'CLINIC', 'LABORATORY', 'ADMIN'] as const),
+  role: z.enum(['PATIENT', 'DOCTOR', 'CLINIC', 'LABORATORY'] as const),
   phone: z.string().optional(),
   // Extra role fields
   specialty: z.string().optional(),
@@ -35,6 +35,13 @@ const loginSchema = z.object({
 
 export async function register(req: Request, res: Response) {
   try {
+    if ((req.body as any)?.role === 'ADMIN') {
+      return res.status(403).json({
+        success: false,
+        error: 'Administrator accounts cannot be registered. Only the single system administrator account is permitted.'
+      });
+    }
+
     const parseResult = registerSchema.safeParse(req.body);
     if (!parseResult.success) {
       return res.status(400).json({
@@ -79,7 +86,7 @@ export async function register(req: Request, res: Response) {
       role: role as Role,
       phone: phone || '',
       avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name)}`,
-      status: role === 'PATIENT' || role === 'ADMIN' ? 'VERIFIED' : 'PENDING',
+      status: role === 'PATIENT' ? 'VERIFIED' : 'PENDING',
       createdAt: now,
       updatedAt: now,
     };
@@ -163,7 +170,7 @@ export async function register(req: Request, res: Response) {
     createNotification(
       userId,
       'Welcome to MediLink',
-      `Your account has been created as ${role}. ${role !== 'PATIENT' && role !== 'ADMIN' ? 'Your profile credentials are pending verification by platform admin.' : 'You can now access your dashboard.'}`,
+      `Your account has been created as ${role}. ${role !== 'PATIENT' ? 'Your profile credentials are pending verification by platform admin.' : 'You can now access your dashboard.'}`,
       'SYSTEM',
       '/'
     );
@@ -243,6 +250,7 @@ export async function login(req: Request, res: Response) {
         email: user.email,
         name: user.name,
         role: user.role,
+        adminRole: user.adminRole || (user.id === 'usr-admin-1' ? 'PRIMARY' : (user.role === 'ADMIN' ? 'CO_ADMIN' : undefined)),
         phone: user.phone,
         avatarUrl: user.avatarUrl,
         status: user.status
@@ -285,6 +293,7 @@ export async function getCurrentUser(req: AuthenticatedRequest, res: Response) {
         email: user.email,
         name: user.name,
         role: user.role,
+        adminRole: user.adminRole || (user.id === 'usr-admin-1' ? 'PRIMARY' : (user.role === 'ADMIN' ? 'CO_ADMIN' : undefined)),
         phone: user.phone,
         avatarUrl: user.avatarUrl,
         status: user.status
@@ -294,5 +303,51 @@ export async function getCurrentUser(req: AuthenticatedRequest, res: Response) {
     });
   } catch (error: any) {
     return res.status(500).json({ success: false, error: 'Failed to fetch user: ' + error.message });
+  }
+}
+
+export async function deleteOwnAccount(req: AuthenticatedRequest, res: Response) {
+  try {
+    if (!req.user) {
+      return res.status(401).json({ success: false, error: 'Not authenticated.' });
+    }
+
+    const user = db.findUserById(req.user.userId);
+    if (!user) {
+      return res.status(404).json({ success: false, error: 'User not found.' });
+    }
+
+    if (user.role === 'ADMIN') {
+      return res.status(400).json({
+        success: false,
+        error: 'The primary system administrator account cannot be deleted.'
+      });
+    }
+
+    const { password } = req.body || {};
+    if (password) {
+      const isMatch = bcrypt.compareSync(password, user.passwordHash);
+      if (!isMatch) {
+        return res.status(400).json({ success: false, error: 'Incorrect password entered.' });
+      }
+    }
+
+    const result = db.deleteUser(user.id);
+    if (!result.success) {
+      return res.status(400).json({ success: false, error: result.error || 'Failed to delete account.' });
+    }
+
+    logAudit(user.id, 'USER_ACCOUNT_SELF_DELETED', 'USER', user.id, {
+      email: user.email,
+      name: user.name,
+      role: user.role
+    });
+
+    return res.json({
+      success: true,
+      message: 'Your account and all associated healthcare records have been permanently deleted.'
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: 'Failed to delete account: ' + error.message });
   }
 }

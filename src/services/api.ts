@@ -41,6 +41,7 @@ export const api = {
   login: (body: any) => request<any>('/auth/login', { method: 'POST', body: JSON.stringify(body) }),
   getCurrentUser: () => request<any>('/auth/me'),
   logout: () => request<any>('/auth/logout', { method: 'POST' }),
+  deleteMyAccount: (password?: string) => request<any>('/auth/account', { method: 'DELETE', body: JSON.stringify({ password }) }),
 
   // Doctors
   getDoctors: (params?: Record<string, string | number>) => {
@@ -116,6 +117,13 @@ export const api = {
   updateVerificationStatus: (entityType: string, id: string, body: any) => request<any>(`/admin/verifications/${entityType}/${id}`, { method: 'PUT', body: JSON.stringify(body) }),
   getAdminUsers: () => request<any>('/admin/users'),
   updateUserStatus: (id: string, status: string) => request<any>(`/admin/users/${id}/status`, { method: 'PUT', body: JSON.stringify({ status }) }),
+  deleteUserByAdmin: (id: string) => request<any>(`/admin/users/${id}`, { method: 'DELETE' }),
+  updateAdminProfile: (body: any) => request<any>('/admin/profile', { method: 'PUT', body: JSON.stringify(body) }),
+  createAdminAccount: (body: any) => request<any>('/admin/create-admin', { method: 'POST', body: JSON.stringify(body) }),
+  appointCoAdmin: (body: { userId?: string; name?: string; email?: string; password?: string; phone?: string }) =>
+    request<any>('/admin/appoint-co-admin', { method: 'POST', body: JSON.stringify(body) }),
+  removeCoAdmin: (userId: string) =>
+    request<any>('/admin/remove-co-admin', { method: 'POST', body: JSON.stringify({ userId }) }),
   getAuditLogs: () => request<any>('/admin/audit-logs'),
   resetDemoData: () => request<any>('/admin/reset-demo', { method: 'POST' }),
 };

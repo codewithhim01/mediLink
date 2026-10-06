@@ -17,7 +17,7 @@ interface RegisterPageProps {
 
 export const RegisterPage: React.FC<RegisterPageProps> = ({ navigate }) => {
   const { register } = useAuth();
-  const [role, setRole] = useState<Role>('PATIENT');
+  const [role, setRole] = useState<'PATIENT' | 'DOCTOR' | 'CLINIC' | 'LABORATORY'>('PATIENT');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -167,7 +167,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ navigate }) => {
         {/* Role Selector Tabs */}
         <div>
           <label className="block text-xs font-bold text-slate-700 mb-2">Account Type:</label>
-          <div className="grid grid-cols-3 sm:grid-cols-5 gap-1.5 text-xs font-semibold">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5 text-xs font-semibold">
             <button
               type="button"
               onClick={() => setRole('PATIENT')}
@@ -210,17 +210,6 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ navigate }) => {
             >
               <TestTube2 size={16} className={role === 'LABORATORY' ? 'text-amber-600' : 'text-slate-400'} />
               <span>Lab</span>
-            </button>
-
-            <button
-              type="button"
-              onClick={() => setRole('ADMIN')}
-              className={`p-2 rounded-xl border flex flex-col items-center gap-1 cursor-pointer transition-colors ${
-                role === 'ADMIN' ? 'bg-rose-50 text-rose-800 border-rose-500 font-bold' : 'bg-slate-50 border-slate-200 text-slate-600 hover:bg-slate-100'
-              }`}
-            >
-              <ShieldCheck size={16} className={role === 'ADMIN' ? 'text-rose-600' : 'text-slate-400'} />
-              <span>Admin</span>
             </button>
           </div>
         </div>

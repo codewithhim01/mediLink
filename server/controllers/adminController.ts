@@ -1,8 +1,10 @@
 import { Response } from 'express';
+import bcrypt from 'bcryptjs';
 import { db } from '../db/store.js';
 import { AuthenticatedRequest } from '../middleware/authMiddleware.js';
 import { logAudit } from '../services/auditService.js';
 import { createNotification } from '../services/notificationService.js';
+import { User, Role } from '../types/index.js';
 
 export async function getAdminStats(req: AuthenticatedRequest, res: Response) {
   try {
@@ -190,6 +192,7 @@ export async function getUsers(req: AuthenticatedRequest, res: Response) {
       name: u.name,
       email: u.email,
       role: u.role,
+      adminRole: u.adminRole || (u.id === 'usr-admin-1' ? 'PRIMARY' : (u.role === 'ADMIN' ? 'CO_ADMIN' : undefined)),
       phone: u.phone,
       status: u.status,
       createdAt: u.createdAt
@@ -217,6 +220,398 @@ export async function updateUserStatus(req: AuthenticatedRequest, res: Response)
     return res.json({ success: true, message: 'User status updated', data: updated });
   } catch (error: any) {
     return res.status(500).json({ success: false, error: 'Failed to update user: ' + error.message });
+  }
+}
+
+export async function deleteUserByAdmin(req: AuthenticatedRequest, res: Response) {
+  try {
+    const { id } = req.params;
+
+    const targetUser = db.findUserById(id);
+    if (!targetUser) {
+      return res.status(404).json({ success: false, error: 'User not found.' });
+    }
+
+    if (targetUser.id === req.user?.userId) {
+      return res.status(400).json({
+        success: false,
+        error: 'Administrators cannot delete their own active account from the admin console.'
+      });
+    }
+
+    if (targetUser.role === 'ADMIN') {
+      const adminCount = db.getUsers().filter(u => u.role === 'ADMIN').length;
+      if (adminCount <= 1) {
+        return res.status(400).json({
+          success: false,
+          error: 'The only remaining system administrator account cannot be deleted.'
+        });
+      }
+    }
+
+    const result = db.deleteUser(id);
+    if (!result.success) {
+      return res.status(400).json({
+        success: false,
+        error: result.error || 'Failed to delete user account.'
+      });
+    }
+
+    logAudit(req.user?.userId, 'ADMIN_DELETED_USER_ACCOUNT', 'USER', id, {
+      deletedEmail: targetUser.email,
+      deletedName: targetUser.name,
+      deletedRole: targetUser.role
+    });
+
+    return res.json({
+      success: true,
+      message: `User account for ${targetUser.name} (${targetUser.email}) and all associated records have been permanently deleted.`
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: 'Failed to delete user: ' + error.message });
+  }
+}
+
+export async function updateAdminProfile(req: AuthenticatedRequest, res: Response) {
+  try {
+    const adminId = req.user?.userId;
+    if (!adminId) return res.status(401).json({ success: false, error: 'Unauthorized.' });
+
+    const currentAdmin = db.findUserById(adminId);
+    if (!currentAdmin) return res.status(404).json({ success: false, error: 'Admin account not found.' });
+
+    const { name, email, phone, avatarUrl, newPassword, currentPassword } = req.body;
+    const updates: Partial<User> = {};
+
+    if (name && typeof name === 'string') {
+      if (name.trim().length < 2) {
+        return res.status(400).json({ success: false, error: 'Full name must be at least 2 characters.' });
+      }
+      updates.name = name.trim();
+    }
+
+    if (email && typeof email === 'string') {
+      const normalizedEmail = email.trim().toLowerCase();
+      if (normalizedEmail !== currentAdmin.email.toLowerCase()) {
+        const existing = db.findUserByEmail(normalizedEmail);
+        if (existing) {
+          return res.status(409).json({ success: false, error: 'An account with this email address already exists.' });
+        }
+        updates.email = normalizedEmail;
+      }
+    }
+
+    if (phone !== undefined) {
+      updates.phone = String(phone).trim();
+    }
+
+    if (avatarUrl && typeof avatarUrl === 'string') {
+      updates.avatarUrl = avatarUrl.trim();
+    }
+
+    if (newPassword) {
+      if (typeof newPassword !== 'string' || newPassword.length < 6) {
+        return res.status(400).json({ success: false, error: 'New password must be at least 6 characters.' });
+      }
+
+      if (currentPassword) {
+        const match = bcrypt.compareSync(currentPassword, currentAdmin.passwordHash);
+        if (!match) {
+          return res.status(400).json({ success: false, error: 'Current password does not match.' });
+        }
+      }
+
+      updates.passwordHash = bcrypt.hashSync(newPassword, 10);
+    }
+
+    const updatedUser = db.updateUser(adminId, updates);
+
+    logAudit(adminId, 'ADMIN_PROFILE_MODIFIED', 'USER', adminId, {
+      name: updatedUser?.name,
+      email: updatedUser?.email,
+      phone: updatedUser?.phone
+    });
+
+    return res.json({
+      success: true,
+      message: 'Administrator details updated successfully.',
+      user: {
+        id: updatedUser?.id,
+        name: updatedUser?.name,
+        email: updatedUser?.email,
+        role: updatedUser?.role,
+        phone: updatedUser?.phone,
+        avatarUrl: updatedUser?.avatarUrl,
+        status: updatedUser?.status
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: 'Failed to update admin profile: ' + error.message });
+  }
+}
+
+export async function createAdminAccount(req: AuthenticatedRequest, res: Response) {
+  try {
+    const creatorId = req.user?.userId;
+    if (!creatorId) return res.status(401).json({ success: false, error: 'Unauthorized.' });
+
+    const { name, email, password, phone } = req.body;
+
+    if (!name || typeof name !== 'string' || name.trim().length < 2) {
+      return res.status(400).json({ success: false, error: 'Admin full name must be at least 2 characters.' });
+    }
+
+    if (!email || typeof email !== 'string' || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      return res.status(400).json({ success: false, error: 'Please provide a valid email address.' });
+    }
+
+    if (!password || typeof password !== 'string' || password.length < 6) {
+      return res.status(400).json({ success: false, error: 'Password must be at least 6 characters.' });
+    }
+
+    const normalizedEmail = email.trim().toLowerCase();
+    const existing = db.findUserByEmail(normalizedEmail);
+    if (existing) {
+      return res.status(409).json({ success: false, error: 'An account with this email address already exists.' });
+    }
+
+    const newAdminId = `usr-admin-${Date.now()}`;
+    const now = new Date().toISOString();
+
+    const newAdmin: User = {
+      id: newAdminId,
+      email: normalizedEmail,
+      passwordHash: bcrypt.hashSync(password, 10),
+      name: name.trim(),
+      role: 'ADMIN',
+      phone: phone ? String(phone).trim() : '+91 522 220 9000',
+      avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name.trim())}`,
+      status: 'VERIFIED',
+      createdAt: now,
+      updatedAt: now
+    };
+
+    db.addUser(newAdmin);
+
+    logAudit(creatorId, 'NEW_ADMIN_CREATED', 'USER', newAdmin.id, {
+      createdByAdminId: creatorId,
+      newAdminEmail: normalizedEmail,
+      newAdminName: name.trim()
+    });
+
+    createNotification(
+      newAdmin.id,
+      'Welcome to MediLink Administration',
+      'Your administrator account has been provisioned with full platform authority.',
+      'SYSTEM',
+      '/admin/dashboard'
+    );
+
+    return res.status(201).json({
+      success: true,
+      message: `Administrator account for ${newAdmin.name} (${newAdmin.email}) created successfully.`,
+      data: {
+        id: newAdmin.id,
+        name: newAdmin.name,
+        email: newAdmin.email,
+        role: newAdmin.role,
+        phone: newAdmin.phone,
+        status: newAdmin.status,
+        createdAt: newAdmin.createdAt
+      }
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: 'Failed to create admin account: ' + error.message });
+  }
+}
+
+export async function appointCoAdmin(req: AuthenticatedRequest, res: Response) {
+  try {
+    const requesterId = req.user?.userId;
+    if (!requesterId) return res.status(401).json({ success: false, error: 'Unauthorized.' });
+
+    const requester = db.findUserById(requesterId);
+    if (!requester || requester.role !== 'ADMIN') {
+      return res.status(403).json({ success: false, error: 'Only platform administrators can appoint co-administrators.' });
+    }
+
+    const { userId, name, email, password, phone } = req.body;
+
+    if (userId) {
+      const targetUser = db.findUserById(userId);
+      if (!targetUser) {
+        return res.status(404).json({ success: false, error: 'Target user not found.' });
+      }
+
+      if (targetUser.id === 'usr-admin-1' || targetUser.adminRole === 'PRIMARY') {
+        return res.status(400).json({ success: false, error: 'User is already the Primary Platform Administrator.' });
+      }
+
+      if (targetUser.role === 'ADMIN' && targetUser.adminRole === 'CO_ADMIN') {
+        return res.status(400).json({ success: false, error: 'User is already appointed as a Co-Administrator.' });
+      }
+
+      const prevRole = targetUser.role;
+      db.updateUser(targetUser.id, {
+        role: 'ADMIN',
+        adminRole: 'CO_ADMIN',
+        status: 'VERIFIED'
+      });
+
+      logAudit(requesterId, 'CO_ADMIN_APPOINTED', 'USER', targetUser.id, {
+        appointedBy: requester.name,
+        targetEmail: targetUser.email,
+        targetName: targetUser.name,
+        previousRole: prevRole
+      });
+
+      createNotification(
+        targetUser.id,
+        'Appointed as MediLink Co-Administrator',
+        `You have been appointed as Co-Administrator by ${requester.name}. You now have access to administrator controls and executive dashboard.`,
+        'SYSTEM',
+        '/admin/dashboard'
+      );
+
+      return res.json({
+        success: true,
+        message: `${targetUser.name} (${targetUser.email}) has been successfully appointed as Co-Administrator.`
+      });
+    } else if (name && email && password) {
+      if (name.trim().length < 2) {
+        return res.status(400).json({ success: false, error: 'Full legal name must be at least 2 characters.' });
+      }
+      if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+        return res.status(400).json({ success: false, error: 'Please provide a valid email address.' });
+      }
+      if (password.length < 6) {
+        return res.status(400).json({ success: false, error: 'Password must be at least 6 characters.' });
+      }
+
+      const normalizedEmail = email.trim().toLowerCase();
+      if (db.findUserByEmail(normalizedEmail)) {
+        return res.status(409).json({ success: false, error: 'An account with this email address already exists.' });
+      }
+
+      const newId = `usr-coadmin-${Date.now()}`;
+      const now = new Date().toISOString();
+      const newCoAdmin: User = {
+        id: newId,
+        email: normalizedEmail,
+        passwordHash: bcrypt.hashSync(password, 10),
+        name: name.trim(),
+        role: 'ADMIN',
+        adminRole: 'CO_ADMIN',
+        phone: phone ? String(phone).trim() : '+91 522 220 9000',
+        avatarUrl: `https://api.dicebear.com/7.x/initials/svg?seed=${encodeURIComponent(name.trim())}`,
+        status: 'VERIFIED',
+        createdAt: now,
+        updatedAt: now
+      };
+
+      db.addUser(newCoAdmin);
+
+      logAudit(requesterId, 'NEW_CO_ADMIN_CREATED', 'USER', newId, {
+        appointedBy: requester.name,
+        coAdminEmail: normalizedEmail,
+        coAdminName: name.trim()
+      });
+
+      createNotification(
+        newId,
+        'Welcome to MediLink Administration',
+        `Your Co-Administrator account has been provisioned by ${requester.name}.`,
+        'SYSTEM',
+        '/admin/dashboard'
+      );
+
+      return res.status(201).json({
+        success: true,
+        message: `Co-Administrator account for ${newCoAdmin.name} (${newCoAdmin.email}) created and appointed successfully.`,
+        data: {
+          id: newCoAdmin.id,
+          name: newCoAdmin.name,
+          email: newCoAdmin.email,
+          role: newCoAdmin.role,
+          adminRole: 'CO_ADMIN'
+        }
+      });
+    } else {
+      return res.status(400).json({ success: false, error: 'Please specify an existing user to appoint or fill out name, email, and password.' });
+    }
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: 'Failed to appoint co-administrator: ' + error.message });
+  }
+}
+
+export async function removeCoAdmin(req: AuthenticatedRequest, res: Response) {
+  try {
+    const requesterId = req.user?.userId;
+    if (!requesterId) return res.status(401).json({ success: false, error: 'Unauthorized.' });
+
+    const requester = db.findUserById(requesterId);
+    if (!requester || requester.role !== 'ADMIN') {
+      return res.status(403).json({ success: false, error: 'Only administrators can remove co-administrators.' });
+    }
+
+    const { userId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ success: false, error: 'Target user ID is required.' });
+    }
+
+    if (userId === requesterId) {
+      return res.status(400).json({ success: false, error: 'You cannot remove your own administrative authority.' });
+    }
+
+    const targetUser = db.findUserById(userId);
+    if (!targetUser) {
+      return res.status(404).json({ success: false, error: 'Target user not found.' });
+    }
+
+    if (targetUser.id === 'usr-admin-1' || targetUser.adminRole === 'PRIMARY') {
+      return res.status(400).json({ success: false, error: 'The Primary Platform Administrator cannot be removed or demoted.' });
+    }
+
+    if (targetUser.role !== 'ADMIN' && targetUser.adminRole !== 'CO_ADMIN') {
+      return res.status(400).json({ success: false, error: 'User is not currently a co-administrator.' });
+    }
+
+    // Check if target user has an original role profile
+    let revertedRole: Role = 'PATIENT';
+    if (db.findDoctorProfileByUserId(targetUser.id)) {
+      revertedRole = 'DOCTOR';
+    } else if (db.findClinicByUserId(targetUser.id)) {
+      revertedRole = 'CLINIC';
+    } else if (db.findLaboratoryByUserId(targetUser.id)) {
+      revertedRole = 'LABORATORY';
+    }
+
+    db.updateUser(targetUser.id, {
+      role: revertedRole,
+      adminRole: undefined
+    });
+
+    logAudit(requesterId, 'CO_ADMIN_REMOVED', 'USER', targetUser.id, {
+      removedBy: requester.name,
+      targetEmail: targetUser.email,
+      targetName: targetUser.name,
+      revertedRole
+    });
+
+    createNotification(
+      targetUser.id,
+      'Co-Administrator Privileges Revoked',
+      `Your Co-Administrator privileges have been revoked by ${requester.name}. Your role is now set to ${revertedRole}.`,
+      'SYSTEM',
+      '/'
+    );
+
+    return res.json({
+      success: true,
+      message: `Co-Administrator privileges for ${targetUser.name} (${targetUser.email}) have been removed. Role adjusted to ${revertedRole}.`
+    });
+  } catch (error: any) {
+    return res.status(500).json({ success: false, error: 'Failed to remove co-administrator: ' + error.message });
   }
 }
 
