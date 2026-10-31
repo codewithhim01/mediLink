@@ -15,7 +15,7 @@ export const PatientProfilePage: React.FC = () => {
   const [bloodGroup, setBloodGroup] = useState(profile?.bloodGroup || 'B+');
   const [allergies, setAllergies] = useState(profile?.allergies || 'Penicillin (mild)');
   const [emergencyContact, setEmergencyContact] = useState(profile?.emergencyContact || 'Amit Sharma (+91 98390 12345)');
-  const [address, setAddress] = useState(profile?.address || 'B-4/112, Sector 4, Gomti Nagar, Lucknow');
+  const [address, setAddress] = useState(profile?.address || '402, Green Avenue, Medical District');
   const [savedNotice, setSavedNotice] = useState(false);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
 

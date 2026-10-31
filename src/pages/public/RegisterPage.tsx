@@ -32,7 +32,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ navigate }) => {
   // Clinic specific fields
   const [clinicName, setClinicName] = useState('');
   const [address, setAddress] = useState('');
-  const [city, setCity] = useState('Lucknow, UP');
+  const [city, setCity] = useState('Delhi NCR');
   const [registrationNo, setRegistrationNo] = useState('');
 
   // Lab specific fields
@@ -124,8 +124,8 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ navigate }) => {
         licenseNumber: role === 'DOCTOR' ? licenseNumber.trim() : undefined,
         consultationFee: role === 'DOCTOR' ? Number(consultationFee) : undefined,
         clinicName: role === 'CLINIC' ? clinicName.trim() : undefined,
-        address: (role === 'CLINIC' || role === 'LABORATORY') ? (address.trim() || 'Lucknow, Uttar Pradesh') : undefined,
-        city: (role === 'CLINIC' || role === 'LABORATORY') ? (city.trim() || 'Lucknow') : undefined,
+        address: (role === 'CLINIC' || role === 'LABORATORY') ? (address.trim() || 'Central Healthcare Corridor') : undefined,
+        city: (role === 'CLINIC' || role === 'LABORATORY') ? (city.trim() || 'Delhi NCR') : undefined,
         registrationNo: role === 'CLINIC' ? registrationNo.trim() : undefined,
         labName: role === 'LABORATORY' ? labName.trim() : undefined,
         licenseNo: role === 'LABORATORY' ? licenseNo.trim() : undefined,
@@ -383,7 +383,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ navigate }) => {
                     setClinicName(e.target.value);
                     if (fieldErrors.clinicName) setFieldErrors(prev => ({ ...prev, clinicName: '' }));
                   }}
-                  placeholder="e.g. Gomti Nagar Care Center"
+                  placeholder="e.g. Apex Multispecialty Polyclinic"
                   className={`w-full px-2.5 py-1.5 text-xs bg-white border rounded-lg ${
                     touched.clinicName && fieldErrors.clinicName
                       ? 'border-rose-400 bg-rose-50/20'
@@ -442,7 +442,7 @@ export const RegisterPage: React.FC<RegisterPageProps> = ({ navigate }) => {
                     setLabName(e.target.value);
                     if (fieldErrors.labName) setFieldErrors(prev => ({ ...prev, labName: '' }));
                   }}
-                  placeholder="e.g. Apex Diagnostics Lucknow"
+                  placeholder="e.g. Apex Reference Diagnostics"
                   className={`w-full px-2.5 py-1.5 text-xs bg-white border rounded-lg ${
                     touched.labName && fieldErrors.labName
                       ? 'border-rose-400 bg-rose-50/20'

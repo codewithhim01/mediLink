@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   Activity,
   Bell,
@@ -17,11 +17,17 @@ import {
   Compass,
   ArrowRight,
   Menu,
-  X
+  X,
+  Globe
 } from 'lucide-react';
 import { useAuth } from '../../contexts/AuthContext.js';
 import { useNotifications } from '../../contexts/NotificationContext.js';
-import { useLocation, PRESET_LOCAL_AREAS, LocalArea } from '../../contexts/LocationContext.js';
+import {
+  useLocation,
+  SUPPORTED_CITIES,
+  PRESET_LOCAL_AREAS,
+  LocalArea
+} from '../../contexts/LocationContext.js';
 import { LocationPickerModal } from './LocationPickerModal.js';
 import { Role } from '../../types/index.js';
 import { handleImageError } from '../../utils/imageUtils.js';
@@ -39,6 +45,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
     selectedRadius,
     isLocating,
     detectLocation,
+    setCity,
     setArea,
     setRadius
   } = useLocation();
@@ -48,6 +55,50 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
   const [showLocationModal, setShowLocationModal] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+
+  const locationDropdownRef = useRef<HTMLDivElement>(null);
+  const notifDropdownRef = useRef<HTMLDivElement>(null);
+  const userMenuRef = useRef<HTMLDivElement>(null);
+
+  // Close dropdowns on outside click or escape
+  useEffect(() => {
+    const handleClickOutside = (e: MouseEvent) => {
+      if (
+        locationDropdownRef.current &&
+        !locationDropdownRef.current.contains(e.target as Node)
+      ) {
+        setShowLocationDropdown(false);
+      }
+      if (
+        notifDropdownRef.current &&
+        !notifDropdownRef.current.contains(e.target as Node)
+      ) {
+        setShowNotifications(false);
+      }
+      if (
+        userMenuRef.current &&
+        !userMenuRef.current.contains(e.target as Node)
+      ) {
+        setShowUserMenu(false);
+      }
+    };
+
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === 'Escape') {
+        setShowLocationDropdown(false);
+        setShowNotifications(false);
+        setShowUserMenu(false);
+        setMobileMenuOpen(false);
+      }
+    };
+
+    document.addEventListener('mousedown', handleClickOutside);
+    document.addEventListener('keydown', handleKeyDown);
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+      document.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   const getDashboardPath = (role: Role) => {
     switch (role) {
@@ -69,9 +120,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
   };
 
   const radiusList = [
-    { label: '2 km', value: 2 },
     { label: '5 km', value: 5 },
     { label: '10 km', value: 10 },
+    { label: '15 km', value: 15 },
     { label: '25 km', value: 25 },
     { label: 'All', value: null },
   ];
@@ -86,12 +137,21 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
     setShowLocationDropdown(false);
   };
 
+  const handleSelectCityQuick = (cityName: string) => {
+    setCity(cityName);
+  };
+
+  // Preset areas belonging to the current city
+  const cityPresets = PRESET_LOCAL_AREAS.filter(
+    (a) => a.city.toLowerCase() === (currentLocation.city || 'Delhi NCR').toLowerCase()
+  );
+
   return (
     <header className="sticky top-0 z-40 w-full bg-slate-900/98 backdrop-blur-md border-b border-slate-800 shadow-md">
       <div className="max-w-7xl mx-auto px-2.5 sm:px-4 lg:px-6">
-        <div className="flex items-center justify-between h-15 sm:h-16 gap-1.5 sm:gap-3">
+        <div className="flex items-center justify-between h-14 sm:h-16 gap-2 sm:gap-3">
           {/* Logo & Brand */}
-          <div className="flex items-center gap-2 sm:gap-5 shrink-0 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-4 shrink-0 min-w-0">
             <button
               onClick={() => {
                 if (isAuthenticated && user) {
@@ -101,23 +161,23 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
                 }
                 setMobileMenuOpen(false);
               }}
-              className="flex items-center gap-1.5 sm:gap-2 cursor-pointer group text-left shrink-0"
+              className="flex items-center gap-1.5 sm:gap-2.5 cursor-pointer group text-left shrink-0"
             >
               <div className="w-8 h-8 sm:w-9 sm:h-9 rounded-xl bg-gradient-to-tr from-blue-500 to-teal-400 flex items-center justify-center text-slate-950 shadow-md shadow-teal-500/20 group-hover:scale-105 transition-transform shrink-0">
                 <Activity size={18} className="stroke-[2.5]" />
               </div>
               <div className="min-w-0">
-                <span className="text-sm sm:text-lg xl:text-xl font-black bg-gradient-to-r from-white via-slate-100 to-teal-300 bg-clip-text text-transparent">
+                <span className="text-base sm:text-lg xl:text-xl font-black bg-gradient-to-r from-white via-slate-100 to-teal-300 bg-clip-text text-transparent">
                   MediLink
                 </span>
-                <span className="hidden 2xl:block text-[9px] uppercase tracking-wider font-semibold text-teal-400 -mt-1 truncate">
-                  Lucknow Health Hub
+                <span className="hidden lg:block text-[9px] uppercase tracking-wider font-bold text-teal-400 -mt-1 truncate max-w-[120px] xl:max-w-none">
+                  {currentLocation.city || 'National Health Hub'}
                 </span>
               </div>
             </button>
 
-            {/* Public Navigation - Desktop (xl+) */}
-            <nav className="hidden xl:flex items-center gap-1 xl:gap-2">
+            {/* Public Navigation - Desktop (lg+) */}
+            <nav className="hidden lg:flex items-center gap-1 xl:gap-2">
               <button
                 onClick={() => navigate('/doctors')}
                 className={`px-2.5 xl:px-3 py-1.5 text-xs font-medium rounded-lg transition-colors cursor-pointer whitespace-nowrap ${
@@ -161,20 +221,24 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
             </nav>
           </div>
 
-          {/* Right Section: Combined Live GPS & Location Selector + Notification + Profile / Menu */}
-          <div className="flex items-center gap-1 sm:gap-2 shrink-0 min-w-0">
-            {/* COMBINED Live GPS & Location Selection Pill */}
-            <div className="relative shrink-0">
+          {/* Right Section: Adaptive Location Selector + Notifications + User Menu / Auth */}
+          <div className="flex items-center gap-1.5 sm:gap-2.5 shrink-0 min-w-0">
+            {/* Dynamic Location Pill */}
+            <div className="relative shrink-0" ref={locationDropdownRef}>
               <button
-                onClick={() => setShowLocationDropdown(!showLocationDropdown)}
-                className={`inline-flex items-center gap-1 sm:gap-1.5 px-2 sm:px-2.5 py-1.5 text-xs font-semibold rounded-full border transition-all cursor-pointer shadow-xs ${
+                onClick={() => {
+                  setShowLocationDropdown(!showLocationDropdown);
+                  setShowNotifications(false);
+                  setShowUserMenu(false);
+                }}
+                className={`inline-flex items-center gap-1.5 px-2 sm:px-2.5 py-1.5 text-xs font-semibold rounded-full border transition-all cursor-pointer shadow-xs max-w-[130px] xs:max-w-[170px] sm:max-w-[220px] md:max-w-xs ${
                   currentLocation.isLiveGps
-                    ? 'bg-gradient-to-r from-emerald-950/80 via-slate-900 to-teal-950/80 text-emerald-300 border-emerald-500/60 ring-1 ring-emerald-400/30'
+                    ? 'bg-gradient-to-r from-emerald-950/90 via-slate-900 to-teal-950/90 text-emerald-300 border-emerald-500/60 ring-1 ring-emerald-400/30'
                     : 'bg-slate-800 hover:bg-slate-750 text-slate-100 border-slate-700 hover:border-teal-500/50'
                 }`}
-                title="Change location in Lucknow or use live GPS"
+                title="Change location or detect with GPS"
               >
-                {/* GPS / Pin Icon with Radar pulse when live */}
+                {/* GPS / Map Pin Indicator */}
                 <div className="relative flex items-center justify-center shrink-0">
                   {currentLocation.isLiveGps ? (
                     <>
@@ -189,27 +253,31 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
                   )}
                 </div>
 
-                <span className="max-w-[55px] xs:max-w-[75px] sm:max-w-[100px] md:max-w-[130px] xl:max-w-[160px] truncate text-[11px] sm:text-xs font-semibold">
-                  {currentLocation.areaName}
+                <span className="truncate text-[11px] sm:text-xs font-semibold">
+                  {currentLocation.city || currentLocation.areaName}
                 </span>
 
-                <span className="hidden md:inline-block text-[10px] text-teal-300 font-bold bg-teal-950/90 border border-teal-800/70 px-1.5 py-0.2 rounded-full shrink-0">
+                <span className="hidden sm:inline-block text-[10px] text-teal-300 font-bold bg-teal-950/90 border border-teal-800/70 px-1.5 py-0.2 rounded-full shrink-0">
                   {selectedRadius ? `${selectedRadius} km` : 'All'}
                 </span>
 
                 <ChevronDown size={11} className="text-slate-400 shrink-0" />
               </button>
 
-              {/* Combined Fast Location & GPS Popover Dropdown */}
+              {/* Responsive Fast Location Popover */}
               {showLocationDropdown && (
-                <div className="absolute right-0 mt-2 w-[min(calc(100vw-1.5rem),340px)] bg-slate-900 border border-slate-700/80 rounded-2xl shadow-2xl p-3 z-50 text-slate-100 divide-y divide-slate-800 animate-in fade-in">
-                  {/* Current Active Location Card with Status */}
+                <div className="fixed inset-x-2 top-16 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-96 max-w-[calc(100vw-1rem)] bg-slate-900 border border-slate-700/90 rounded-2xl shadow-2xl p-3.5 z-50 text-slate-100 divide-y divide-slate-800 animate-in fade-in duration-150">
+                  {/* Current Active Location Info */}
                   <div className="pb-3 flex items-center justify-between gap-2">
-                    <div>
-                      <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">Current Area</span>
-                      <p className="text-xs font-bold text-white flex items-center gap-1.5 mt-0.5">
-                        <MapPin size={14} className="text-teal-400 shrink-0" />
-                        <span className="truncate">{currentLocation.areaName}, Lucknow</span>
+                    <div className="min-w-0">
+                      <span className="text-[10px] uppercase font-bold tracking-wider text-slate-400">
+                        Active Location
+                      </span>
+                      <p className="text-xs font-bold text-white flex items-center gap-1.5 mt-0.5 truncate">
+                        <MapPin size={13} className="text-teal-400 shrink-0" />
+                        <span className="truncate">
+                          {currentLocation.areaName}, {currentLocation.city}
+                        </span>
                       </p>
                     </div>
                     {currentLocation.isLiveGps ? (
@@ -217,13 +285,13 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
                         <Check size={10} /> Live GPS
                       </span>
                     ) : (
-                      <span className="px-2 py-0.5 text-[10px] font-medium bg-slate-800 text-slate-400 rounded-full shrink-0">
-                        Manual Area
+                      <span className="px-2 py-0.5 text-[10px] font-semibold bg-slate-800 text-teal-300 rounded-full shrink-0">
+                        {currentLocation.city}
                       </span>
                     )}
                   </div>
 
-                  {/* 1-Click Action: Use Live GPS Location */}
+                  {/* 1-Click GPS button */}
                   <div className="py-2.5">
                     <button
                       type="button"
@@ -236,9 +304,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
                       }`}
                     >
                       <Navigation size={14} className={isLocating ? 'animate-spin' : ''} />
-                      <span>
+                      <span className="truncate">
                         {isLocating
-                          ? 'Detecting GPS...'
+                          ? 'Detecting GPS Coordinates...'
                           : currentLocation.isLiveGps
                           ? 'Refresh Live GPS Location'
                           : 'Use Current Device GPS Location'}
@@ -246,7 +314,34 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
                     </button>
                   </div>
 
-                  {/* Radius Quick Selector */}
+                  {/* Quick City Switcher */}
+                  <div className="py-2.5">
+                    <span className="block text-[11px] text-slate-400 font-medium mb-1.5">
+                      Switch Healthcare Hub
+                    </span>
+                    <div className="flex flex-wrap gap-1.5">
+                      {SUPPORTED_CITIES.slice(0, 6).map((c) => {
+                        const isCurrentCity =
+                          currentLocation.city.toLowerCase() === c.name.toLowerCase();
+                        return (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => handleSelectCityQuick(c.name)}
+                            className={`px-2.5 py-1 rounded-lg text-xs font-semibold transition-colors cursor-pointer ${
+                              isCurrentCity
+                                ? 'bg-teal-500 text-slate-950 font-bold shadow-xs'
+                                : 'bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700/60'
+                            }`}
+                          >
+                            {c.name}
+                          </button>
+                        );
+                      })}
+                    </div>
+                  </div>
+
+                  {/* Proximity Radius */}
                   <div className="py-2.5">
                     <span className="block text-[11px] text-slate-400 font-medium mb-1.5">
                       Proximity Radius (km)
@@ -272,33 +367,36 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
                     </div>
                   </div>
 
-                  {/* Lucknow Localities Fast Selector */}
-                  <div className="py-2.5">
-                    <span className="block text-[11px] text-slate-400 font-medium mb-1.5">
-                      Select Major Lucknow Healthcare Hub
-                    </span>
-                    <div className="max-h-40 overflow-y-auto space-y-1 pr-1 divide-y divide-slate-800/60 text-xs">
-                      {PRESET_LOCAL_AREAS.slice(0, 8).map((area) => {
-                        const isCurrent =
-                          !currentLocation.isLiveGps && currentLocation.areaName === area.name;
-                        return (
-                          <button
-                            key={area.id}
-                            type="button"
-                            onClick={() => handleSelectArea(area)}
-                            className={`w-full text-left py-1.5 px-2 rounded-lg flex items-center justify-between gap-2 transition-colors cursor-pointer ${
-                              isCurrent
-                                ? 'bg-slate-800 text-teal-300 font-semibold'
-                                : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
-                            }`}
-                          >
-                            <span className="truncate">{area.name}</span>
-                            {isCurrent && <Check size={13} className="text-teal-400 shrink-0" />}
-                          </button>
-                        );
-                      })}
+                  {/* City Localities Quick List */}
+                  {cityPresets.length > 0 && (
+                    <div className="py-2.5">
+                      <span className="block text-[11px] text-slate-400 font-medium mb-1.5">
+                        Localities in {currentLocation.city}
+                      </span>
+                      <div className="max-h-36 overflow-y-auto space-y-1 pr-1 divide-y divide-slate-800/60 text-xs">
+                        {cityPresets.map((area) => {
+                          const isCurrent =
+                            !currentLocation.isLiveGps &&
+                            currentLocation.areaName === area.name;
+                          return (
+                            <button
+                              key={area.id}
+                              type="button"
+                              onClick={() => handleSelectArea(area)}
+                              className={`w-full text-left py-1.5 px-2 rounded-lg flex items-center justify-between gap-2 transition-colors cursor-pointer ${
+                                isCurrent
+                                  ? 'bg-slate-800 text-teal-300 font-semibold'
+                                  : 'text-slate-300 hover:bg-slate-800/60 hover:text-white'
+                              }`}
+                            >
+                              <span className="truncate">{area.name}</span>
+                              {isCurrent && <Check size={13} className="text-teal-400 shrink-0" />}
+                            </button>
+                          );
+                        })}
+                      </div>
                     </div>
-                  </div>
+                  )}
 
                   {/* Open Comprehensive Modal */}
                   <div className="pt-2">
@@ -310,7 +408,8 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
                       }}
                       className="w-full py-1.5 text-center text-xs font-bold text-teal-400 hover:text-teal-300 flex items-center justify-center gap-1 cursor-pointer"
                     >
-                      <span>All Localities & PIN Codes</span>
+                      <Globe size={13} />
+                      <span>All Cities, Localities & PIN Codes</span>
                       <ArrowRight size={13} />
                     </button>
                   </div>
@@ -320,9 +419,13 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
 
             {/* Notification Bell */}
             {isAuthenticated && (
-              <div className="relative">
+              <div className="relative shrink-0" ref={notifDropdownRef}>
                 <button
-                  onClick={() => setShowNotifications(!showNotifications)}
+                  onClick={() => {
+                    setShowNotifications(!showNotifications);
+                    setShowLocationDropdown(false);
+                    setShowUserMenu(false);
+                  }}
                   className="p-1.5 sm:p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors relative cursor-pointer"
                   title="Notifications"
                 >
@@ -335,7 +438,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
                 </button>
 
                 {showNotifications && (
-                  <div className="absolute right-0 mt-2 w-[calc(100vw-1.5rem)] max-w-xs sm:w-88 bg-slate-900 rounded-2xl shadow-2xl border border-slate-700/80 py-3 z-50 text-slate-100">
+                  <div className="fixed inset-x-2 top-16 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-88 max-w-[calc(100vw-1rem)] bg-slate-900 rounded-2xl shadow-2xl border border-slate-700/80 py-3 z-50 text-slate-100">
                     <div className="flex items-center justify-between px-4 pb-2 border-b border-slate-800">
                       <div className="flex items-center gap-2">
                         <span className="text-sm font-bold text-white">Notifications</span>
@@ -391,11 +494,15 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
               </div>
             )}
 
-            {/* Authenticated User / Desktop Login Button */}
+            {/* Authenticated User Menu or Public Join/Sign in */}
             {isAuthenticated && user ? (
-              <div className="relative shrink-0">
+              <div className="relative shrink-0" ref={userMenuRef}>
                 <button
-                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  onClick={() => {
+                    setShowUserMenu(!showUserMenu);
+                    setShowLocationDropdown(false);
+                    setShowNotifications(false);
+                  }}
                   className="flex items-center gap-1.5 p-1 sm:p-1.5 rounded-xl hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
                 >
                   <img
@@ -404,7 +511,7 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
                     onError={(e) => handleImageError(e, user.name)}
                     className="w-7 h-7 sm:w-8 sm:h-8 rounded-full border border-slate-700 object-cover shrink-0"
                   />
-                  <div className="hidden 2xl:block text-left text-xs">
+                  <div className="hidden xl:block text-left text-xs">
                     <p className="font-semibold text-slate-100 line-clamp-1">{user.name}</p>
                     <span className={`inline-block px-1.5 py-0.2 rounded text-[10px] font-semibold border ${roleColors[user.role]}`}>
                       {user.role}
@@ -414,9 +521,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
                 </button>
 
                 {showUserMenu && (
-                  <div className="absolute right-0 mt-2 w-56 bg-slate-900 rounded-xl shadow-xl border border-slate-700/80 py-2 z-50 text-slate-100">
+                  <div className="fixed inset-x-2 top-16 sm:absolute sm:inset-auto sm:right-0 sm:top-full sm:mt-2 w-auto sm:w-60 max-w-[calc(100vw-1rem)] bg-slate-900 rounded-xl shadow-xl border border-slate-700/80 py-2 z-50 text-slate-100">
                     <div className="px-4 py-2 border-b border-slate-800">
-                      <p className="text-xs font-bold text-white">{user.name}</p>
+                      <p className="text-xs font-bold text-white truncate">{user.name}</p>
                       <p className="text-[11px] text-slate-400 truncate">{user.email}</p>
                     </div>
 
@@ -448,26 +555,26 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
                 )}
               </div>
             ) : (
-              <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
+              <div className="flex items-center gap-1 sm:gap-2 shrink-0">
                 <button
                   onClick={() => navigate('/login')}
-                  className="hidden md:inline-flex px-2 sm:px-2.5 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors cursor-pointer shrink-0"
+                  className="hidden sm:inline-flex px-2 sm:px-3 py-1.5 text-xs font-semibold text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors cursor-pointer shrink-0"
                 >
                   Sign In
                 </button>
                 <button
                   onClick={() => navigate('/register')}
-                  className="px-2.5 sm:px-3 py-1.5 text-xs font-bold text-slate-950 bg-teal-400 hover:bg-teal-300 rounded-xl transition-colors shadow-sm shadow-teal-500/20 cursor-pointer shrink-0 whitespace-nowrap"
+                  className="px-2.5 sm:px-3.5 py-1.5 text-xs font-bold text-slate-950 bg-teal-400 hover:bg-teal-300 rounded-xl transition-colors shadow-sm shadow-teal-500/20 cursor-pointer shrink-0 whitespace-nowrap"
                 >
                   Join
                 </button>
               </div>
             )}
 
-            {/* Mobile / Tablet Hamburger Toggle (xl:hidden) */}
+            {/* Mobile / Tablet Menu Button (lg:hidden) */}
             <button
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-              className="xl:hidden p-1.5 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors cursor-pointer shrink-0"
+              className="lg:hidden p-1.5 sm:p-2 text-slate-300 hover:text-white hover:bg-slate-800 rounded-xl transition-colors cursor-pointer shrink-0"
               aria-label="Toggle Navigation Menu"
             >
               {mobileMenuOpen ? <X size={20} /> : <Menu size={20} />}
@@ -476,9 +583,9 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
         </div>
       </div>
 
-      {/* Mobile & Tablet Navigation Drawer (xl:hidden) */}
+      {/* Mobile & Tablet Drawer */}
       {mobileMenuOpen && (
-        <div className="xl:hidden bg-slate-900 border-t border-slate-800 px-4 pt-3 pb-5 space-y-3 animate-in fade-in duration-150">
+        <div className="lg:hidden bg-slate-900 border-t border-slate-800 px-4 pt-3 pb-5 space-y-3 animate-in fade-in duration-150">
           <nav className="grid grid-cols-2 gap-2 text-xs">
             <button
               onClick={() => { navigate('/doctors'); setMobileMenuOpen(false); }}
@@ -518,45 +625,49 @@ export const Navbar: React.FC<NavbarProps> = ({ currentPath, navigate }) => {
                   : 'bg-slate-800/80 text-slate-200 hover:bg-slate-800'
               }`}
             >
-              🏥 Clinics
+              🏥 Polyclinics
             </button>
           </nav>
 
-          {/* Mobile Auth Actions */}
-          {!isAuthenticated || !user ? (
-            <div className="flex items-center gap-2 pt-2 border-t border-slate-800">
+          {/* Location indicator in mobile menu */}
+          <div className="p-3 bg-slate-800/70 rounded-xl border border-slate-700/60 flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2 truncate">
+              <MapPin size={14} className="text-teal-400 shrink-0" />
+              <span className="text-slate-300 truncate">
+                {currentLocation.areaName}, {currentLocation.city}
+              </span>
+            </div>
+            <button
+              onClick={() => {
+                setShowLocationModal(true);
+                setMobileMenuOpen(false);
+              }}
+              className="text-teal-400 font-bold hover:underline shrink-0 text-xs cursor-pointer ml-2"
+            >
+              Change
+            </button>
+          </div>
+
+          {!isAuthenticated && (
+            <div className="pt-2 border-t border-slate-800 flex gap-2">
               <button
                 onClick={() => { navigate('/login'); setMobileMenuOpen(false); }}
-                className="flex-1 py-2 text-center text-xs font-semibold text-slate-300 bg-slate-800 rounded-xl cursor-pointer"
+                className="flex-1 py-2 text-center text-xs font-semibold text-slate-200 bg-slate-800 rounded-xl cursor-pointer"
               >
                 Sign In
               </button>
               <button
                 onClick={() => { navigate('/register'); setMobileMenuOpen(false); }}
-                className="flex-1 py-2 text-center text-xs font-bold text-slate-950 bg-teal-400 hover:bg-teal-300 rounded-xl shadow-xs cursor-pointer"
+                className="flex-1 py-2 text-center text-xs font-bold text-slate-950 bg-teal-400 rounded-xl cursor-pointer"
               >
-                Join MediLink
-              </button>
-            </div>
-          ) : (
-            <div className="pt-2 border-t border-slate-800 space-y-1.5">
-              <button
-                onClick={() => { navigate(getDashboardPath(user.role)); setMobileMenuOpen(false); }}
-                className="w-full py-2 px-3 bg-teal-950/80 border border-teal-800/80 text-teal-300 rounded-xl text-xs font-bold text-left flex items-center gap-2 cursor-pointer"
-              >
-                <Activity size={14} /> Go to {user.role} Dashboard
-              </button>
-              <button
-                onClick={() => { logout(); setMobileMenuOpen(false); navigate('/'); }}
-                className="w-full py-2 px-3 bg-slate-800 text-rose-400 rounded-xl text-xs font-semibold text-left flex items-center gap-2 cursor-pointer"
-              >
-                <LogOut size={14} /> Log Out ({user.name})
+                Create Account
               </button>
             </div>
           )}
         </div>
       )}
 
+      {/* Location Picker Modal */}
       <LocationPickerModal
         isOpen={showLocationModal}
         onClose={() => setShowLocationModal(false)}

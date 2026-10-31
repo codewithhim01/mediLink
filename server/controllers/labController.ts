@@ -69,7 +69,7 @@ export async function getLaboratoryById(req: Request, res: Response) {
 
 export async function getDiagnosticTests(req: Request, res: Response) {
   try {
-    const { category, maxPrice, sampleType, maxTAT, search, sort } = req.query;
+    const { category, city, maxPrice, sampleType, maxTAT, search, sort } = req.query;
 
     const allTests = db.getDiagnosticTests();
     const allLabs = db.getLaboratories();
@@ -83,16 +83,21 @@ export async function getDiagnosticTests(req: Request, res: Response) {
         ...t,
         parameters,
         effectivePrice: t.discountPrice !== undefined && t.discountPrice !== null ? t.discountPrice : t.price,
-        laboratoryName: lab ? lab.name : 'Awadh Diagnostics & Pathology',
-        laboratoryAddress: lab ? lab.address : 'Vibhuti Khand, Gomti Nagar, Lucknow, UP',
-        laboratoryCity: lab ? lab.city : 'Lucknow',
-        laboratoryArea: lab?.area || 'Gomti Nagar & Vibhuti Khand',
-        latitude: lab?.latitude || 26.8500,
-        longitude: lab?.longitude || 80.9990,
+        laboratoryName: lab ? lab.name : 'Diagnostics & Pathology Hub',
+        laboratoryAddress: lab ? lab.address : 'Specialist Diagnostics Hub',
+        laboratoryCity: lab ? lab.city : 'Delhi NCR',
+        laboratoryArea: lab?.area || 'Central Healthcare Corridor',
+        latitude: lab?.latitude || 28.6315,
+        longitude: lab?.longitude || 77.2167,
         laboratoryRating: lab ? lab.rating : 4.9,
         homeCollectionAvailable: lab ? lab.homeCollectionAvailable : true,
       };
     });
+
+    if (city) {
+      const cityStr = String(city).toLowerCase();
+      list = list.filter(t => t.laboratoryCity.toLowerCase().includes(cityStr));
+    }
 
     if (category) {
       const catStr = String(category).toLowerCase();

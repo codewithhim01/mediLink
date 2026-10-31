@@ -38,10 +38,10 @@ export const ClinicDashboard: React.FC<ClinicDashboardProps> = ({ navigate }) =>
             Healthcare Center Operations
           </span>
           <h1 className="text-2xl sm:text-3xl font-black tracking-tight">
-            {profile?.name || 'Awadh Mediplex & Heart Institute'}
+            {profile?.name || 'Healthcare Specialty Center'}
           </h1>
           <p className="text-xs sm:text-sm text-indigo-100 max-w-xl">
-            {profile?.address || 'Vibhuti Khand, Gomti Nagar'}, {profile?.city || 'Lucknow, UP'} • Reg: {profile?.registrationNo || 'UP-LKO-CLINIC-2022'}
+            {profile?.address || 'Medical Consultation Complex'}, {profile?.city || 'Regional Center'} • Reg: {profile?.registrationNo || 'REG-CLINIC-2024'}
           </p>
         </div>
 

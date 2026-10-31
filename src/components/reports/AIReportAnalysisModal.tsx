@@ -45,9 +45,9 @@ export const AIReportAnalysisModal: React.FC<AIReportAnalysisModalProps> = ({
   // Pre-load demo test reports for instant patient testing without requiring external files
   const loadSampleReport = (type: 'lipid' | 'metabolic' | 'iron') => {
     if (type === 'lipid') {
-      setFileName('Awadh_Lipid_Cardiovascular_Profile_2026.pdf');
-      setReportText(`AWADH DIAGNOSTICS & PATHOLOGY LABS (LUCKNOW)
-NABL Accredited & ICMR Approved Reference Lab | Vibhuti Khand, Gomti Nagar
+      setFileName('Cardiovascular_Lipid_Profile_2026.pdf');
+      setReportText(`NATIONAL REFERENCE DIAGNOSTICS & PATHOLOGY LABS
+NABL Accredited & ICMR Approved Reference Lab | Specialist Healthcare Corridor
 Date of Collection: 2026-09-15 | Specimen: Venous Serum
 Patient: Sharma, Rahul | Age: 36 Yrs | Sex: Male
 Referred by: Dr. Ananya Srivastava, MD, DM
@@ -61,10 +61,10 @@ Triglycerides: 152 mg/dL [Reference Range: < 150 mg/dL] - BORDERLINE HIGH
 hs-CRP (Cardiac C-Reactive Protein): 2.8 mg/L [Reference Range: < 1.0 mg/L Low Risk] - HIGH
 
 IMPRESSION & FINDINGS:
-Patient presents with mixed dyslipidemia characterized by elevated LDL-C and borderline triglycerides. Concomitant elevation of hs-CRP at 2.8 mg/L suggests systemic vascular inflammation and moderately elevated ASCVD risk. Follow-up consultation with primary physician or cardiologist in Lucknow recommended for evaluation of statin therapy and dietary counseling.`);
+Patient presents with mixed dyslipidemia characterized by elevated LDL-C and borderline triglycerides. Concomitant elevation of hs-CRP at 2.8 mg/L suggests systemic vascular inflammation and moderately elevated ASCVD risk. Follow-up consultation with primary physician or cardiologist recommended for evaluation of statin therapy and dietary counseling.`);
     } else if (type === 'metabolic') {
-      setFileName('Shubham_KFT_and_HbA1c_Screening.pdf');
-      setReportText(`SHUBHAM ADVANCED IMAGING & DIAGNOSTICS (HAZRATGANJ, LUCKNOW)
+      setFileName('Comprehensive_KFT_and_HbA1c_Screening.pdf');
+      setReportText(`ADVANCED CLINICAL IMAGING & DIAGNOSTICS HUB
 Date: 2026-09-20 | Specimen: Blood EDTA & Serum
 Patient: Sharma, Rahul
 Test: Glycated Hemoglobin (HbA1c) & Renal/Kidney Function Panel (KFT)
@@ -80,8 +80,8 @@ Blood Urea: 24 mg/dL [Reference: 15 - 40 mg/dL] - NORMAL
 IMPRESSION:
 Elevated fasting plasma glucose and glycated hemoglobin meeting criteria for impaired glucose tolerance / prediabetes.`);
     } else {
-      setFileName('Awadh_CBC_and_Ferritin_Panel.pdf');
-      setReportText(`AWADH DIAGNOSTICS LABORATORY (LUCKNOW)
+      setFileName('Complete_CBC_and_Ferritin_Panel.pdf');
+      setReportText(`CENTRAL REFERENCE PATHOLOGY LABORATORY
 Date: 2026-09-25
 Patient: Sharma, Rahul
 Test: Complete Blood Count (CBC) & Serum Ferritin

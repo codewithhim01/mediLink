@@ -26,7 +26,7 @@ export const BookTestModal: React.FC<BookTestModalProps> = ({
   const [collectionType, setCollectionType] = useState<'WALK_IN' | 'HOME_COLLECTION'>('WALK_IN');
   const [scheduledDate, setScheduledDate] = useState<string>(new Date().toISOString().split('T')[0]);
   const [scheduledTimeSlot, setScheduledTimeSlot] = useState<string>('08:30 AM');
-  const [collectionAddress, setCollectionAddress] = useState<string>('B-4/112, Sector 4, Gomti Nagar, Lucknow');
+  const [collectionAddress, setCollectionAddress] = useState<string>('402, Green Avenue, Medical District');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [fieldErrors, setFieldErrors] = useState<Record<string, string>>({});
@@ -235,7 +235,7 @@ export const BookTestModal: React.FC<BookTestModalProps> = ({
                 setCollectionAddress(e.target.value);
                 if (fieldErrors.collectionAddress) setFieldErrors(prev => ({ ...prev, collectionAddress: '' }));
               }}
-              placeholder="House/Flat No., Road/Sector, Locality, Lucknow"
+              placeholder="House/Flat No., Road/Sector, Locality, City"
               className={`w-full p-2.5 bg-slate-50 border rounded-xl text-xs text-slate-800 focus:bg-white ${
                 touched.collectionAddress && fieldErrors.collectionAddress
                   ? 'border-rose-400 focus:ring-rose-500 bg-rose-50/20'

@@ -25,7 +25,7 @@ export const AppointCoAdminModal: React.FC<AppointCoAdminModalProps> = ({
   // New user appointment
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
-  const [phone, setPhone] = useState('+91 522 220 9000');
+  const [phone, setPhone] = useState('+91 98765 43210');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -133,9 +133,9 @@ export const AppointCoAdminModal: React.FC<AppointCoAdminModalProps> = ({
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/60 backdrop-blur-xs">
       <div
-        className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-xl w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[90vh]"
+        className="bg-white rounded-3xl border border-slate-200 shadow-2xl max-w-xl w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200 flex flex-col max-h-[92dvh] sm:max-h-[90vh] my-auto"
         role="dialog"
         aria-modal="true"
         aria-labelledby="appoint-co-admin-title"

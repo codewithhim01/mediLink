@@ -214,13 +214,13 @@ export const DoctorDetailPage: React.FC<DoctorDetailPageProps> = ({ doctorId, na
               <MapPin size={15} className="text-blue-600" /> Clinic Location
             </h4>
             <p className="text-xs font-semibold text-slate-800">
-              {doctor.clinic?.name || 'Awadh Mediplex & Heart Institute'}
+              {doctor.clinic?.name || 'Partner Multispecialty Medical Center'}
             </p>
             <p className="text-xs text-slate-500 mt-0.5">
-              {doctor.clinic?.address || 'Vibhuti Khand, Gomti Nagar'}, {doctor.clinic?.city || 'Lucknow, UP'}
+              {doctor.clinic?.address || doctor.area || 'Specialist Consultation Chambers'}, {doctor.clinic?.city || 'Healthcare Hub'}
             </p>
             <p className="text-[11px] text-slate-400 mt-1">
-              Ph: {doctor.clinic?.phone || '+91 522 409 1200'}
+              Ph: {doctor.clinic?.phone || '+91 1800 200 4500'}
             </p>
           </div>
 

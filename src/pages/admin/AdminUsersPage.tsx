@@ -373,7 +373,7 @@ export const AdminUsersPage: React.FC = () => {
       {coAdminToRemove && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
           <div
-            className="bg-white rounded-3xl border border-indigo-200 shadow-2xl max-w-md w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            className="bg-white rounded-3xl border border-indigo-200 shadow-2xl max-w-md w-full max-h-[92dvh] overflow-y-auto my-auto animate-in fade-in zoom-in-95 duration-200"
             role="dialog"
             aria-modal="true"
             aria-labelledby="remove-coadmin-title"
@@ -448,7 +448,7 @@ export const AdminUsersPage: React.FC = () => {
       {userToDelete && (
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
           <div
-            className="bg-white rounded-3xl border border-rose-200 shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+            className="bg-white rounded-3xl border border-rose-200 shadow-2xl max-w-lg w-full max-h-[92dvh] overflow-y-auto my-auto animate-in fade-in zoom-in-95 duration-200"
             role="dialog"
             aria-modal="true"
             aria-labelledby="admin-delete-title"

@@ -44,9 +44,9 @@ export const DeleteAccountModal: React.FC<DeleteAccountModalProps> = ({ isOpen, 
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2.5 sm:p-4 bg-slate-900/60 backdrop-blur-xs">
       <div 
-        className="bg-white rounded-3xl border border-rose-200/80 shadow-2xl max-w-lg w-full overflow-hidden animate-in fade-in zoom-in-95 duration-200"
+        className="bg-white rounded-3xl border border-rose-200/80 shadow-2xl max-w-lg w-full max-h-[92dvh] sm:max-h-[90vh] my-auto overflow-y-auto animate-in fade-in zoom-in-95 duration-200"
         role="dialog"
         aria-modal="true"
         aria-labelledby="delete-account-title"

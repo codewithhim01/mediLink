@@ -112,7 +112,7 @@ export const AdminAnalyticsPage: React.FC = () => {
         {/* Financial Growth Line Chart */}
         <div className="lg:col-span-2 bg-white p-6 rounded-3xl border border-slate-200/80 shadow-xs space-y-4">
           <div>
-            <h3 className="text-sm font-bold text-slate-900">Gross Platform Transaction Volume ($ USD)</h3>
+            <h3 className="text-sm font-bold text-slate-900">Gross Platform Healthcare Transaction Volume (₹ INR)</h3>
             <p className="text-xs text-slate-500">Total processed consultations and diagnostic investigations</p>
           </div>
 
@@ -122,7 +122,7 @@ export const AdminAnalyticsPage: React.FC = () => {
                 <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="#f1f5f9" />
                 <XAxis dataKey="month" tick={{ fontSize: 11 }} />
                 <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip formatter={(value: any) => [`$${value.toLocaleString()}`, 'Volume']} />
+                <Tooltip formatter={(value: any) => [`₹${value.toLocaleString()}`, 'Volume']} />
                 <Line
                   type="monotone"
                   dataKey="volume"

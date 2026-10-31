@@ -90,7 +90,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ navigate }) => {
             MediLink Executive Command
           </h1>
           <p className="text-xs sm:text-sm text-slate-300 max-w-xl">
-            Audit provider credential verifications, monitor clinical appointments and diagnostic volumes across Lucknow, Uttar Pradesh healthcare networks.
+            Audit provider credential verifications, monitor clinical appointments, live queues, and diagnostic volumes across regional healthcare networks nationwide.
           </p>
         </div>
 
@@ -147,7 +147,7 @@ export const AdminDashboard: React.FC<AdminDashboardProps> = ({ navigate }) => {
           />
           <div className="space-y-0.5">
             <div className="flex items-center gap-2">
-              <h3 className="text-base font-bold text-slate-900">{currentAdmin?.name || 'MediLink Lucknow Admin'}</h3>
+              <h3 className="text-base font-bold text-slate-900">{currentAdmin?.name || 'MediLink Master Admin'}</h3>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-extrabold uppercase bg-rose-50 text-rose-700 border border-rose-200">
                 Active Administrator
               </span>
