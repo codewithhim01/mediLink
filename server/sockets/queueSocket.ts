@@ -1,5 +1,4 @@
 import { Server, Socket } from 'socket.io';
-import { db } from '../db/store.js';
 
 let ioInstance: Server | null = null;
 
@@ -27,22 +26,44 @@ export function initSockets(io: Server) {
       }
     });
 
+    // Join doctor-specific room
+    socket.on('join:doctor', (doctorId: string) => {
+      if (doctorId) {
+        socket.join(`doctor:${doctorId}`);
+      }
+    });
+
+    socket.on('leave:doctor', (doctorId: string) => {
+      if (doctorId) {
+        socket.leave(`doctor:${doctorId}`);
+      }
+    });
+
     socket.on('disconnect', () => {
       // socket disconnected
     });
   });
 }
 
-export function broadcastQueueUpdate(queueId: string, payload: any) {
+export function broadcastQueueUpdate(queueId: string, doctorId: string | undefined, payload: any) {
   if (ioInstance) {
-    ioInstance.to(`queue:${queueId}`).emit('queue:updated', payload);
-    // Also broadcast globally or to doctor room
-    ioInstance.emit('queue:live_change', { queueId, ...payload });
+    const enrichedPayload = { queueId, doctorId, ...payload, timestamp: new Date().toISOString() };
+
+    if (queueId) {
+      ioInstance.to(`queue:${queueId}`).emit('queue:updated', enrichedPayload);
+    }
+    if (doctorId) {
+      ioInstance.to(`doctor:${doctorId}`).emit('queue:updated', enrichedPayload);
+    }
+    // Also broadcast globally so all dashboards and monitoring displays update instantly
+    ioInstance.emit('queue:live_change', enrichedPayload);
+    ioInstance.emit('queue:updated', enrichedPayload);
   }
 }
 
 export function sendUserNotification(userId: string, notification: any) {
-  if (ioInstance) {
+  if (ioInstance && userId) {
     ioInstance.to(`user:${userId}`).emit('notification:new', notification);
   }
 }
+

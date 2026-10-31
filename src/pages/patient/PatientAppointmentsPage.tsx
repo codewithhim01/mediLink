@@ -76,6 +76,7 @@ export const PatientAppointmentsPage: React.FC = () => {
             doctorId={todayAppointment.doctorId}
             doctorName={todayAppointment.doctorName || 'Dr. Specialist'}
             specialty={todayAppointment.doctorSpecialty}
+            appointmentId={todayAppointment.id}
             patientTicket={todayAppointment.queueTicket}
             onRefresh={fetchAppointments}
           />

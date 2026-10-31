@@ -81,6 +81,14 @@ export const api = {
   // Queues
   getDoctorQueue: (doctorId: string) => request<any>(`/queues/doctor/${doctorId}`),
   callNextPatient: (queueId: string) => request<any>(`/queues/${queueId}/call-next`, { method: 'PUT' }),
+  callSpecificTicket: (queueId: string, ticketId: string) => request<any>(`/queues/${queueId}/call-ticket/${ticketId}`, { method: 'PUT' }),
+  completeConsultation: (queueId: string) => request<any>(`/queues/${queueId}/complete`, { method: 'PUT' }),
+  skipTicket: (queueId: string, ticketId: string) => request<any>(`/queues/${queueId}/skip/${ticketId}`, { method: 'PUT' }),
+  requeueTicket: (queueId: string, ticketId: string) => request<any>(`/queues/${queueId}/requeue/${ticketId}`, { method: 'PUT' }),
+  addWalkInPatient: (queueId: string, body: { patientName: string; patientPhone?: string; reason?: string; priority?: string }) =>
+    request<any>(`/queues/${queueId}/walk-in`, { method: 'POST', body: JSON.stringify(body) }),
+  checkInAppointment: (appointmentId: string) => request<any>('/queues/check-in', { method: 'POST', body: JSON.stringify({ appointmentId }) }),
+  seedDemoQueue: (queueId: string) => request<any>(`/queues/${queueId}/seed-demo`, { method: 'POST' }),
   updateQueueDelay: (queueId: string, body: any) => request<any>(`/queues/${queueId}/delay`, { method: 'PUT', body: JSON.stringify(body) }),
 
   // Referrals

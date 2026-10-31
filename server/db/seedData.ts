@@ -2132,14 +2132,47 @@ export function getInitialSeedData() {
 
   const queueTickets: QueueTicket[] = [
     {
+      id: 'tkt-0',
+      queueId: 'que-1',
+      tokenNumber: 8,
+      status: 'COMPLETED',
+      estimatedTime: '10:15',
+      calledTime: now,
+      checkInTime: now,
+    },
+    {
       id: 'tkt-1',
       queueId: 'que-1',
       appointmentId: 'apt-1',
       patientId: 'pat-prof-1',
       tokenNumber: 9,
-      status: 'IN_CONSULTATION',
+      status: 'WAITING',
       estimatedTime: '10:30',
-      calledTime: now,
+      checkInTime: now,
+    },
+    {
+      id: 'tkt-2',
+      queueId: 'que-1',
+      tokenNumber: 10,
+      status: 'WAITING',
+      estimatedTime: '10:45',
+      checkInTime: now,
+    },
+    {
+      id: 'tkt-3',
+      queueId: 'que-1',
+      tokenNumber: 11,
+      status: 'WAITING',
+      estimatedTime: '11:00',
+      checkInTime: now,
+    },
+    {
+      id: 'tkt-4',
+      queueId: 'que-1',
+      tokenNumber: 12,
+      status: 'WAITING',
+      estimatedTime: '11:15',
+      checkInTime: now,
     }
   ];
 

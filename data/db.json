@@ -2152,18 +2152,67 @@
       "averageConsultationMin": 12,
       "delayMinutes": 0,
       "updatedAt": "2026-10-31T19:12:54.977Z"
+    },
+    {
+      "id": "que-1793477278020",
+      "doctorId": "doc-prof-2",
+      "clinicId": "cln-1",
+      "date": "2026-10-31",
+      "currentTokenNumber": 0,
+      "status": "ACTIVE",
+      "averageConsultationMin": 20,
+      "delayMinutes": 0,
+      "updatedAt": "2026-10-31T20:07:58.020Z"
     }
   ],
   "queueTickets": [
+    {
+      "id": "tkt-0",
+      "queueId": "que-1",
+      "tokenNumber": 8,
+      "status": "COMPLETED",
+      "estimatedTime": "10:15",
+      "calledTime": "2026-10-31T19:12:54.977Z",
+      "patientName": "Kavita Singh",
+      "patientPhone": "+91 94150 99881"
+    },
     {
       "id": "tkt-1",
       "queueId": "que-1",
       "appointmentId": "apt-1",
       "patientId": "pat-prof-1",
       "tokenNumber": 9,
-      "status": "IN_CONSULTATION",
+      "status": "WAITING",
       "estimatedTime": "10:30",
-      "calledTime": "2026-10-31T19:12:54.977Z"
+      "patientName": "Rahul Sharma",
+      "patientPhone": "+91 98765 43210"
+    },
+    {
+      "id": "tkt-2",
+      "queueId": "que-1",
+      "tokenNumber": 10,
+      "status": "WAITING",
+      "estimatedTime": "10:45",
+      "patientName": "Sunita Verma",
+      "patientPhone": "+91 98112 33445"
+    },
+    {
+      "id": "tkt-3",
+      "queueId": "que-1",
+      "tokenNumber": 11,
+      "status": "WAITING",
+      "estimatedTime": "11:00",
+      "patientName": "Amit Saxena",
+      "patientPhone": "+91 99220 55667"
+    },
+    {
+      "id": "tkt-4",
+      "queueId": "que-1",
+      "tokenNumber": 12,
+      "status": "WAITING",
+      "estimatedTime": "11:15",
+      "patientName": "Priya Gupta",
+      "patientPhone": "+91 97118 44221"
     }
   ],
   "referrals": [],

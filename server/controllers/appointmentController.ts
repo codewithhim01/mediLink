@@ -159,7 +159,7 @@ export async function createAppointment(req: AuthenticatedRequest, res: Response
 
       db.addQueueTicket(queueTicket);
 
-      broadcastQueueUpdate(queue.id, {
+      broadcastQueueUpdate(queue.id, doctor.id, {
         currentToken: queue.currentTokenNumber,
         delayMinutes: queue.delayMinutes,
         status: queue.status,

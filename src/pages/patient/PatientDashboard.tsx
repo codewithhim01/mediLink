@@ -111,6 +111,7 @@ export const PatientDashboard: React.FC<PatientDashboardProps> = ({ navigate }) 
             doctorId={todayAppointment.doctorId}
             doctorName={todayAppointment.doctorName || 'Dr. Specialist'}
             specialty={todayAppointment.doctorSpecialty}
+            appointmentId={todayAppointment.id}
             patientTicket={todayAppointment.queueTicket}
             onRefresh={fetchData}
           />

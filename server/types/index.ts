@@ -173,11 +173,15 @@ export interface Queue {
 export interface QueueTicket {
   id: string;
   queueId: string;
-  appointmentId: string;
-  patientId: string;
+  appointmentId?: string;
+  patientId?: string;
   tokenNumber: number;
   estimatedTime: string;
   status: QueueTicketStatus;
+  patientName?: string;
+  patientPhone?: string;
+  notes?: string;
+  priority?: string;
   checkInTime?: string;
   calledTime?: string;
   completedTime?: string;
